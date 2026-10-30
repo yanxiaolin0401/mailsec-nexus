@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-21T03:26:42.160241+00:00",
+  "kind": "synthetic_http_json_real_clickhouse",
+  "source_system_id": "json-smoke-5bfa115e75ac",
+  "event_ids": [
+    "535de7349fe545dd32f8e7f1bf97bc87fab7ac9bb62c42422779d4777102740c",
+    "d25b248b96c22f63eb33f46b0bfddf2dabbf625d03944824a539e2af5c8d2f3d",
+    "72bd7500b4fd8f86d63a2691db9fa6452223a941c015aeda82427974d85e2eb8"
+  ],
+  "checks": {
+    "unauthorized": 401,
+    "nested_data_flat": [
+      202,
+      202,
+      202
+    ],
+    "idempotency": true,
+    "conflict": 409,
+    "worker_jobs": [
+      "done",
+      "done",
+      "done"
+    ],
+    "combined_filter_total": 3,
+    "pagination": true,
+    "structured_stats": {
+      "total": 3
+    },
+    "utc_output": true,
+    "detail_cleaning_privacy": true,
+    "homepage": 200,
+    "analysis_history_persisted": true,
+    "analysis_unknown_without_model": true
+  },
+  "external_model_calls": 0,
+  "not_a_capacity_benchmark": true
+}

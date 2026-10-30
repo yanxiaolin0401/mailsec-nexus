@@ -1,0 +1,11 @@
+{
+  "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/enron/maildir",
+  "source": "enron",
+  "seen": 100000,
+  "inserted": 0,
+  "duplicates": 100000,
+  "failed": 0,
+  "seconds": 61.246,
+  "rss_mb": 39.48,
+  "errors": []
+}

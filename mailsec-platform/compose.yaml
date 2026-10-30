@@ -1,0 +1,94 @@
+name: mailsec-platform
+
+x-search-env: &search-env
+  MAILSEC_DATA_DIR: /data
+  CLICKHOUSE_HOST: clickhouse
+  CLICKHOUSE_USER: mailsec
+  CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Set CLICKHOUSE_PASSWORD}
+  CLICKHOUSE_DB: mailsec
+  MAILSEC_API_TOKEN: ${SMART_SEARCH_TOKEN:?Set SMART_SEARCH_TOKEN}
+
+services:
+  postgres:
+    image: postgres:17.6-bookworm
+    environment:
+      POSTGRES_DB: mailsec_platform
+      POSTGRES_USER: mailsec_platform
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: [platform_pg:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U mailsec_platform -d mailsec_platform']
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.8.25.14
+    environment:
+      CLICKHOUSE_DB: mailsec
+      CLICKHOUSE_USER: mailsec
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Set CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    volumes:
+      - platform_clickhouse:/var/lib/clickhouse
+      - ../mailsec-smart-search/deploy/clickhouse/low-memory.xml:/etc/clickhouse-server/config.d/low-memory.xml:ro
+    ulimits:
+      nofile: {soft: 262144, hard: 262144}
+    healthcheck:
+      test: [CMD-SHELL, 'clickhouse-client --user mailsec --password "$$CLICKHOUSE_PASSWORD" --query "SELECT 1"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  search:
+    build: ../mailsec-smart-search
+    command: [mailsec, serve, --host, 0.0.0.0, --port, '8080']
+    environment: *search-env
+    volumes: [platform_search:/data]
+    depends_on:
+      clickhouse: {condition: service_healthy}
+    restart: unless-stopped
+  search-worker:
+    build: ../mailsec-smart-search
+    command: [mailsec, worker, --loop]
+    environment: *search-env
+    volumes: [platform_search:/data]
+    depends_on:
+      clickhouse: {condition: service_healthy}
+    restart: unless-stopped
+  api:
+    build: ./api
+    command: [sh, -c, "python -m platform_api.cli init-db && exec uvicorn platform_api.app:app --host 0.0.0.0 --port 8090"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://mailsec_platform:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/mailsec_platform
+      SMART_SEARCH_URL: http://search:8080
+      SMART_SEARCH_TOKEN: ${SMART_SEARCH_TOKEN:?Set SMART_SEARCH_TOKEN}
+      SMART_SEARCH_TENANT_ID: ${SMART_SEARCH_TENANT_ID:-}
+      SMART_SEARCH_DEDICATED: ${SMART_SEARCH_DEDICATED:-false}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CSRF_SECRET: ${CSRF_SECRET:?Set CSRF_SECRET}
+      PLATFORM_ORIGIN: ${PLATFORM_ORIGIN:-http://localhost:8091}
+    depends_on:
+      postgres: {condition: service_healthy}
+      search: {condition: service_started}
+    restart: unless-stopped
+  bootstrap:
+    profiles: [tools]
+    build: ./api
+    command: [sh, -c, "python -m platform_api.cli init-db && python -m platform_api.cli bootstrap-admin"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://mailsec_platform:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/mailsec_platform
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-admin}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+    depends_on:
+      postgres: {condition: service_healthy}
+  web:
+    build: ./web
+    ports: ['127.0.0.1:8091:80']
+    depends_on: [api]
+    restart: unless-stopped
+
+volumes:
+  platform_pg:
+  platform_clickhouse:
+  platform_search:

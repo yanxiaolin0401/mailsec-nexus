@@ -1,0 +1,50 @@
+{
+  "rspamd_benign": {
+    "engine": "rspamd",
+    "status": "ok",
+    "risk": "clean",
+    "score": 2.5,
+    "signals": [
+      "FROM_HAS_DN",
+      "HFILTER_HOSTNAME_UNKNOWN",
+      "MID_RHS_MATCH_FROM",
+      "MIME_GOOD",
+      "MIME_TRACE",
+      "MISSING_XM_UA",
+      "ONCE_RECEIVED",
+      "RCPT_COUNT_ONE",
+      "RCVD_COUNT_ZERO",
+      "SINGLE_SHORT_PART",
+      "TO_DN_ALL"
+    ],
+    "error": ""
+  },
+  "rspamd_gtube": {
+    "engine": "rspamd",
+    "status": "ok",
+    "risk": "malicious",
+    "score": 15.0,
+    "signals": [
+      "GTUBE"
+    ],
+    "error": ""
+  },
+  "clamav_benign": {
+    "engine": "clamav",
+    "status": "ok",
+    "risk": "clean",
+    "score": null,
+    "signals": [],
+    "error": ""
+  },
+  "clamav_eicar": {
+    "engine": "clamav",
+    "status": "ok",
+    "risk": "malicious",
+    "score": null,
+    "signals": [
+      "Eicar-Test-Signature"
+    ],
+    "error": ""
+  }
+}

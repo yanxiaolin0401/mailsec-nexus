@@ -1,0 +1,17 @@
+{
+  "name": "spamassassin-hard_ham",
+  "url": "https://spamassassin.apache.org/old/publiccorpus/20030228_hard_ham.tar.bz2",
+  "archive_sha256": "ce2ce67880643dbde65ea7f85bffbfe4417349c4bd80b6b0de56262ae6b0a9c9",
+  "archive_bytes": 1029898,
+  "sha256_provenance": "locally computed; no publisher checksum supplied",
+  "verified": true,
+  "verified_at_utc": "2026-10-20T05:53:23Z",
+  "raw_path": "raw/spamassassin-hard_ham",
+  "index": "spamassassin-hard_ham.files.jsonl",
+  "files": 251,
+  "messages": 250,
+  "uncompressed_bytes": 5721438,
+  "source_page": "https://spamassassin.apache.org/old/publiccorpus/readme.html",
+  "license": "Message copyright remains with original senders; not Apache software license",
+  "limitations": "Historical spam/ham labels, not malware labels; some headers anonymized. Never replay to live mail servers; current DNS/blacklist lookups unsuitable for historical gold evaluation."
+}

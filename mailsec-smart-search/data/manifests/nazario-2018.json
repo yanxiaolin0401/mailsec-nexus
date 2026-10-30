@@ -1,0 +1,14 @@
+{
+  "name": "nazario-2018",
+  "url": "https://monkey.org/~jose/phishing/phishing-2018",
+  "source_sha256": "83f49cf2a76c7b29b205d22d8778e46848e36af0f15ee1df126a543696acd48d",
+  "source_bytes": 8775701,
+  "messages": 288,
+  "verified": true,
+  "verified_at_utc": "2026-10-20T05:53:50Z",
+  "raw_path": "raw/nazario-2018",
+  "index": "nazario-2018.files.jsonl",
+  "license": "CC-BY-4.0; attribution to Jose Nazario",
+  "license_url": "https://monkey.org/~jose/phishing/LICENSE.txt",
+  "limitations": "Personal-inbox hand labels may contain errors; phishing only, not benign or malware ground truth; URLs remain untrusted; mbox envelope separators removed in EML export."
+}

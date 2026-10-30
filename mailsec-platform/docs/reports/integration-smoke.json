@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "checks": [
+    "real_clickhouse_synthetic_insert",
+    "admin_login",
+    "admin_creates_tenant_and_user",
+    "tenant_user_login",
+    "real_clickhouse_search_via_platform",
+    "real_clickhouse_detail_via_platform",
+    "cross_tenant_user_denied",
+    "unbound_admin_tenant_denied",
+    "server_token_not_exposed",
+    "admin_password_reset_revokes_session",
+    "new_password_login"
+  ],
+  "transport": "in-process HTTPX ASGI bridge; ClickHouse is real TCP/HTTP",
+  "clickhouse_database": "unique platform_smoke_<random>, dropped in finally",
+  "command": "mailsec-smart-search/.venv/bin/python mailsec-platform/scripts/smoke_integration.py"
+}

@@ -1,0 +1,43 @@
+# Local secrets and credentials (keep configuration templates)
+.env
+.env.*
+!.env.example
+!.env.*.example
+*credentials*.txt
+*.pem
+*.key
+
+# Development environments, dependencies, and generated artifacts
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+dist/
+build/
+*.tsbuildinfo
+.coverage
+htmlcov/
+
+# Agent state and local application data
+.omx/
+.omx-state-locks/
+.omx-state-locks.identity.json
+.local/
+var/
+*.log
+*.db
+*.db-shm
+*.db-wal
+
+# Real email datasets and local infrastructure screenshots
+mailsec-smart-search/data/raw/
+mailsec-smart-search/data/.downloads/
+mailsec-smart-search/data/manifests/*.files.jsonl
+mailsec-smart-search/docs/ClickHouse/create_server.png
+mailsec-smart-search/docs/detail/*测试样例*.xlsx

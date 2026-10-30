@@ -1,0 +1,62 @@
+{
+  "import-spamassassin-spam.json": {
+    "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/spamassassin-spam",
+    "source": "spamassassin-spam",
+    "seen": 500,
+    "inserted": 500,
+    "duplicates": 0,
+    "failed": 0,
+    "seconds": 4.342,
+    "rss_mb": 43.48,
+    "errors": []
+  },
+  "import-spamassassin-easy_ham_2.json": {
+    "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/spamassassin-easy_ham_2",
+    "source": "spamassassin-easy_ham_2",
+    "seen": 1400,
+    "inserted": 1400,
+    "duplicates": 0,
+    "failed": 0,
+    "seconds": 9.879,
+    "rss_mb": 44.46,
+    "errors": []
+  },
+  "import-spamassassin-hard_ham.json": {
+    "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/spamassassin-hard_ham",
+    "source": "spamassassin-hard_ham",
+    "seen": 250,
+    "inserted": 250,
+    "duplicates": 0,
+    "failed": 0,
+    "seconds": 2.086,
+    "rss_mb": 46.1,
+    "errors": []
+  },
+  "import-spamassassin-easy_ham.json": {
+    "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/spamassassin-easy_ham",
+    "source": "spamassassin-easy_ham",
+    "seen": 2500,
+    "inserted": 2500,
+    "duplicates": 0,
+    "failed": 0,
+    "seconds": 13.306,
+    "rss_mb": 44.86,
+    "errors": []
+  },
+  "import-spamassassin-spam_2.json": {
+    "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/spamassassin-spam_2",
+    "source": "spamassassin-spam_2",
+    "seen": 1396,
+    "inserted": 1395,
+    "duplicates": 0,
+    "failed": 1,
+    "seconds": 12.395,
+    "rss_mb": 51.23,
+    "errors": [
+      {
+        "path": "spam_2/00357.049b1dd678979ce56f10dfa9632127a3",
+        "error": "RuntimeError: isolated EML parser failed: IndexError: list index out of range"
+      }
+    ]
+  }
+}

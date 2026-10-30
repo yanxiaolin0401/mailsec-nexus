@@ -1,0 +1,292 @@
+{
+  "duplicate_digest_records_skipped": 0,
+  "flag_rule": "suspicious or malicious; scanner failure is unknown, never clean",
+  "groups": {
+    "label:ham": {
+      "clamav": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 0,
+        "fp": 0,
+        "latency_ms": {
+          "max": 140.689,
+          "mean": 45.819,
+          "p50": 40.168,
+          "p95": 79.654
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 500,
+        "tp": 0,
+        "unknown": 0
+      },
+      "rspamd": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 0,
+        "fp": 28,
+        "latency_ms": {
+          "max": 221.588,
+          "mean": 123.41,
+          "p50": 145.32,
+          "p95": 181.872
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 472,
+        "tp": 0,
+        "unknown": 0
+      }
+    },
+    "label:phishing": {
+      "clamav": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 481,
+        "fp": 0,
+        "latency_ms": {
+          "max": 2687.84,
+          "mean": 81.62,
+          "p50": 58.782,
+          "p95": 161.447
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 0,
+        "tp": 19,
+        "unknown": 0
+      },
+      "rspamd": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 238,
+        "fp": 0,
+        "latency_ms": {
+          "max": 304.775,
+          "mean": 166.224,
+          "p50": 154.351,
+          "p95": 254.396
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 0,
+        "tp": 262,
+        "unknown": 0
+      }
+    },
+    "label:spam": {
+      "clamav": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 500,
+        "fp": 0,
+        "latency_ms": {
+          "max": 229.718,
+          "mean": 36.366,
+          "p50": 29.753,
+          "p95": 72.638
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 0,
+        "tp": 0,
+        "unknown": 0
+      },
+      "rspamd": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 189,
+        "fp": 0,
+        "latency_ms": {
+          "max": 262.727,
+          "mean": 120.052,
+          "p50": 135.829,
+          "p95": 179.923
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 0,
+        "tp": 311,
+        "unknown": 0
+      }
+    },
+    "source:nazario-2015": {
+      "clamav": {
+        "availability_rate": 1.0,
+        "available": 307,
+        "fn": 291,
+        "fp": 0,
+        "latency_ms": {
+          "max": 2687.84,
+          "mean": 85.26,
+          "p50": 57.854,
+          "p95": 157.965
+        },
+        "samples": 307,
+        "status_counts": {
+          "ok": 307
+        },
+        "tn": 0,
+        "tp": 16,
+        "unknown": 0
+      },
+      "rspamd": {
+        "availability_rate": 1.0,
+        "available": 307,
+        "fn": 155,
+        "fp": 0,
+        "latency_ms": {
+          "max": 304.775,
+          "mean": 162.09,
+          "p50": 154.922,
+          "p95": 215.152
+        },
+        "samples": 307,
+        "status_counts": {
+          "ok": 307
+        },
+        "tn": 0,
+        "tp": 152,
+        "unknown": 0
+      }
+    },
+    "source:nazario-2016": {
+      "clamav": {
+        "availability_rate": 1.0,
+        "available": 193,
+        "fn": 190,
+        "fp": 0,
+        "latency_ms": {
+          "max": 397.653,
+          "mean": 75.83,
+          "p50": 60.422,
+          "p95": 161.514
+        },
+        "samples": 193,
+        "status_counts": {
+          "ok": 193
+        },
+        "tn": 0,
+        "tp": 3,
+        "unknown": 0
+      },
+      "rspamd": {
+        "availability_rate": 1.0,
+        "available": 193,
+        "fn": 83,
+        "fp": 0,
+        "latency_ms": {
+          "max": 300.446,
+          "mean": 172.799,
+          "p50": 153.561,
+          "p95": 267.446
+        },
+        "samples": 193,
+        "status_counts": {
+          "ok": 193
+        },
+        "tn": 0,
+        "tp": 110,
+        "unknown": 0
+      }
+    },
+    "source:spamassassin-easy_ham": {
+      "clamav": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 0,
+        "fp": 0,
+        "latency_ms": {
+          "max": 140.689,
+          "mean": 45.819,
+          "p50": 40.168,
+          "p95": 79.654
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 500,
+        "tp": 0,
+        "unknown": 0
+      },
+      "rspamd": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 0,
+        "fp": 28,
+        "latency_ms": {
+          "max": 221.588,
+          "mean": 123.41,
+          "p50": 145.32,
+          "p95": 181.872
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 472,
+        "tp": 0,
+        "unknown": 0
+      }
+    },
+    "source:spamassassin-spam": {
+      "clamav": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 500,
+        "fp": 0,
+        "latency_ms": {
+          "max": 229.718,
+          "mean": 36.366,
+          "p50": 29.753,
+          "p95": 72.638
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 0,
+        "tp": 0,
+        "unknown": 0
+      },
+      "rspamd": {
+        "availability_rate": 1.0,
+        "available": 500,
+        "fn": 189,
+        "fp": 0,
+        "latency_ms": {
+          "max": 262.727,
+          "mean": 120.052,
+          "p50": 135.829,
+          "p95": 179.923
+        },
+        "samples": 500,
+        "status_counts": {
+          "ok": 500
+        },
+        "tn": 0,
+        "tp": 311,
+        "unknown": 0
+      }
+    }
+  },
+  "label_warning": "Spam and phishing evaluated separately as mail-threat labels; neither is a malware ground truth. No LLM is called.",
+  "mode": "local_scanners_only",
+  "new_samples_this_run": 1500,
+  "sample_limit_per_class": 500,
+  "total_unique_samples": 1500,
+  "version": 1
+}

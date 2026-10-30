@@ -1,0 +1,18 @@
+{
+  "unauthorized_status": 401,
+  "ready_status": 200,
+  "raw_status": 202,
+  "upload_deduplicated": true,
+  "worker_status": "done",
+  "search_count": 1,
+  "analysis": {
+    "rspamd": "ok",
+    "clamav": "ok",
+    "model": "unavailable"
+  },
+  "analysis_risk": null,
+  "analysis_persisted": true,
+  "sensitive_nl_status": 422,
+  "oversized_json_status": 413,
+  "sop_status": 200
+}

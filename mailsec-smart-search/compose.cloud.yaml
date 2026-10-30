@@ -1,0 +1,30 @@
+# Use with --env-file .env.cloud -f compose.yaml -f compose.cloud.yaml.
+# Start explicitly named api/worker services, never an unqualified `up`.
+x-cloud-db: &cloud-db
+  CLICKHOUSE_HOST: ${CLICKHOUSE_HOST:?Set CLICKHOUSE_HOST}
+  CLICKHOUSE_PORT: ${CLICKHOUSE_PORT:-8443}
+  CLICKHOUSE_SECURE: "true"
+  CLICKHOUSE_USER: ${CLICKHOUSE_USER:?Set CLICKHOUSE_USER}
+  CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Set CLICKHOUSE_PASSWORD}
+  CLICKHOUSE_DB: ${CLICKHOUSE_DB:-mailsec}
+
+services:
+  # Cloud mode must not start the local database by default.
+  clickhouse:
+    profiles: [local-database]
+  api:
+    depends_on: !reset {}
+    environment:
+      <<: *cloud-db
+    volumes:
+      - cloud_app_data:/data
+  worker:
+    depends_on: !reset {}
+    environment:
+      <<: *cloud-db
+    volumes:
+      - cloud_app_data:/data
+
+volumes:
+  # Separate queue/checkpoints: never replay local historical mail into Cloud.
+  cloud_app_data:

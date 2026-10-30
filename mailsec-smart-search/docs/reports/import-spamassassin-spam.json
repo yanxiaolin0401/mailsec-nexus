@@ -1,0 +1,11 @@
+{
+  "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/spamassassin-spam",
+  "source": "spamassassin-spam",
+  "seen": 500,
+  "inserted": 0,
+  "duplicates": 500,
+  "failed": 0,
+  "seconds": 0.321,
+  "rss_mb": 36.08,
+  "errors": []
+}

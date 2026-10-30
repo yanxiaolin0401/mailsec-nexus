@@ -1,0 +1,15 @@
+{
+  "enron_parse_status": {
+    "ok": 99548,
+    "partial": 452
+  },
+  "parse_errors": {
+    "header character limit reached": 438,
+    "invalid header encoding": 36,
+    "body character limit reached": 22,
+    "MissingHeaderBodySeparatorDefect": 6
+  },
+  "parser_versions": {
+    "0.2": 100000
+  }
+}

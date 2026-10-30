@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>Enron Email Dataset</title>
+  </head>
+
+  <body>
+    <h1>Enron Email Dataset</h1>
+
+
+    This dataset was collected and prepared by the <a
+    href="http://www.ai.sri.com/project/CALO">CALO Project</a> (A
+    Cognitive Assistant that Learns and Organizes).  It contains data
+    from about 150 users, mostly senior management of Enron, 
+    organized into folders.  The corpus contains 
+    a total of about 0.5M messages.
+    This data was originally <a
+    href="http://www.salon.com/news/feature/2003/10/14/enron/index_np.html">made
+    public, and posted to the web</a>, by the <a
+    href="http://www.ferc.gov">Federal Energy Regulatory
+    Commission</a> during its investigation.
+
+    <p>
+    The email dataset was later purchased by <a
+    href="http://www.ai.mit.edu/people/lpk/lpk.html">Leslie
+    Kaelbling</a> at MIT, and turned out to have a number of integrity
+    problems.  A number of folks at SRI, notably <a
+    href="http://www.ai.sri.com/people/gervasio">Melinda Gervasio</a>,
+    worked hard to correct these problems, and it is thanks to them
+    (not me) that the dataset is available.  The dataset here does not
+    include attachments, and some messages have been deleted "as part
+    of a redaction effort due to requests from affected
+    employees". Invalid email addresses were converted to something of
+    the form user@enron.com whenever possible (i.e., recipient is
+    specified in some parse-able format like "Doe, John" or "Mary
+    K. Smith") and to no_address@enron.com when no recipient was
+    specified.</p>
+
+    <p>I get a number of questions about this corpus each week, which
+    I am unable to answer, mostly because they deal with preparation
+    issues and such that I just don't know about.  If you ask me a
+    question and I don't answer, please don't feel slighted.</b>
+
+      
+    <p>I am distributing this dataset as a resource for researchers
+    who are interested in improving current email tools, or
+    understanding how email is currently used.  This data is valuable;
+    to my knowledge it is the only substantial collection of "real"
+    email that is public.  The reason other datasets are not public is
+    because of privacy concerns. In using this dataset, please be
+    sensitive to the privacy of the people involved (and remember that
+    many of these people were certainly not involved in any of the
+    actions which precipitated the investigation.)
+
+    <ul>
+       <li>Prior versions of the dataset</strike> are <b>no longer
+	 being distributed.</b>  If you are using the 
+         March 2, 2004 Version; the August 21, 2009 Version; 
+         or the April 2, 2011 Version of this dataset for
+	 your work, you are requested to replace it with the newer
+	 version of the dataset below, or make
+	 the <a href="DELETIONS.txt">the appropriate changes</a> to
+	 your local copy. 
+
+       <li><a href="enron_mail_20150507.tar.gz">May 7, 2015 Version
+	 of dataset</a> (about 1.7Gb, tarred and gzipped).  
+	 
+    </ul>
+
+
+    <p>There are also several on-line databases that allow you to
+    search the data, at
+    <a href="http://orange.sims.berkeley.edu/~atf/enron/enron.cgi">UCB</a>, and
+      <a href="http://www.enron-mail.com/">www.enron-mail.com</a></p>
+
+    <h2>Research uses of the dataset</h2>
+
+    This is a partial and poorly maintained list. If I've left your
+    work out, don't take it personally, and feel free to send me a
+    pointer and/or description.
+
+    <ul>
+      
+      <li><a href="http://ceas.cc/2004/168.pdf">A paper
+      describing the Enron data</a> was presented at the 2004 <a
+      href="http://www.ceas.cc/">CEAS conference.</a></li>
+
+      <li>Some experiments associated with this data are described on
+      <a href="http://www.cs.umass.edu/~ronb">Ron Bekkerman</a>'s home
+      page.</li>
+
+      <li>A social-network analysis of the data, including <a
+      href="http://cs.umass.edu/~corrada/enron">"useful mappings
+      between the MD5 digest of the email bodies and such things as
+      authors, recipients, etc"</a>, is available from <a
+      href="http://cs.umass.edu/~corrada/enron">Andres
+      Corrada-Emmanuel</a>.</li>
+
+      <li>A group from <apwdpwd
+      href="http://bailando.sims.berkeley.edu/enron_email.html">SIMS,
+      UC Berkeley</a> provides search, visualization, and some email
+      that has been labeled with topic and sentiment labels</li>
+
+      <li><a
+      href="http://www.isi.edu/~adibi/Enron/Enron.htm">Jitesh
+      Shetty</a> has put up a database of link-analysis results.</li>
+
+      <li><a
+      href="http://edrm.net/resources/data-sets/enron-data-set-files">A
+      version of the dataset with all attachments</a> is available
+      from <a href="http://edrm.net">EDRM</a>.
+
+      <li>Work at the University of Pennsylvania includes <a
+      href="https://dbappserv.cis.upenn.edu/spell/">a query dataset
+      for email search as well as a tool for generating spelling
+      errors</a> based on the Enron corpus.
+
+      <li>Kimmie Farrington and colleagues published a paper in 2011
+      that uses the Enron dataset as part of the test corpus for their
+      work on crowdsourcing human vs. computer generated
+      classification explanation: see Hutton, Amanda, Alexander Liu,
+      and Cheryl Martin. "Crowdsourcing evaluations of classifier
+      interpretability." In <i>Proceedings of the 2012 AAAI Spring
+      Symposium on Wisdom of the Crowd</i>
+
+      <li><a href="http://www.parakweet.com/">Parakweet</a> has
+	released
+	an <a href="https://github.com/ParakweetLabs/EmailIntentDataSet">open
+	source set of Enron sentence data, labeled for speech
+	acts.</a>
+
+	<li>
+	A set
+	of <a href="https://github.com/Charlie9/enron_intent_dataset_verified">sentence
+	level annotations (of what requires action or response from
+	user)</a> has been released by Charlie Oxborough.
+
+      <li>In April 2026, digital forensics experts identified a
+      technical flaw that allowed users to impersonate
+      others—including high-level executives like Jeff
+      Skilling—without leaving a trace. Internal legal correspondence
+      within the corpus (specifically from Michelle Cash, July 2000)
+      suggest that this vulnerability was acknowledged but remained
+      unaddressed, and actual instances of forged mailboxes were
+	reported.  This probably does <b>not</b> affect NLP uses of the
+	corpus, but further information is linked below:
+	<ul>
+	  <li> <a href="https://doi.org/10.5281/zenodo.19425640">Serious Doubt on the Authenticity of the Enron Email Corpus</a>
+	  <li><a href="https://doi.org/10.5281/zenodo.19447717"> Further Evidence on the Authenticity and Integrity of the Enron Email Corpus: Multi-Corpus Verification of eMeet Impersonation Discussions and Lotus Notes Context</a>
+	</ul>
+
+    </ul>
+
+    <hr>
+    <address>William W. Cohen, MLD, CMU</address> <!-- Created: Tue
+    Mar 16 16:05:06 EST 2004 --> <!-- hhmts start --> Last modified:
+    Mon Apr 20 16:01:00 EDT 2026
+  </body>
+</html>

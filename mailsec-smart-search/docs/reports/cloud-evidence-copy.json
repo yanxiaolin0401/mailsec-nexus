@@ -1,0 +1,32 @@
+{
+  "files": [
+    {
+      "sha256": "b30c932d1048d94ee507b6cd4e936d14120c3e3fb637f83253277971a57e1721",
+      "bytes": 264,
+      "verified": true
+    },
+    {
+      "sha256": "6a69d560149bbc96a1b42cee754d6995b75dddd61993073527d8e4acf51b5eb1",
+      "bytes": 264,
+      "verified": true
+    },
+    {
+      "sha256": "5800462a045f540b1aeda19ecec708cb1c1ee6d823edf92da0adb284c1540253",
+      "bytes": 108,
+      "verified": true
+    },
+    {
+      "sha256": "76058a27098e2eb6bf96818d6be8a3087f95a351fe3b61bcdfba267c01251ffd",
+      "bytes": 264,
+      "verified": true
+    },
+    {
+      "sha256": "7e5f602b336bb5740e03afd3aa9862c23b553a19a38c23cb4653316dae0b8d11",
+      "bytes": 264,
+      "verified": true
+    }
+  ],
+  "count": 5,
+  "queue_copied": false,
+  "raw_eml_uploaded": false
+}

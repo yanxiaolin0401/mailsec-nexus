@@ -1,0 +1,11 @@
+{
+  "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/nazario-2020",
+  "source": "nazario-2020",
+  "seen": 158,
+  "inserted": 158,
+  "duplicates": 0,
+  "failed": 0,
+  "seconds": 1.033,
+  "rss_mb": 40.13,
+  "errors": []
+}

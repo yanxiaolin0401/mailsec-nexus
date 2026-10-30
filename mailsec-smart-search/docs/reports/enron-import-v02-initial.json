@@ -1,0 +1,16 @@
+{
+  "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/enron/maildir",
+  "source": "enron",
+  "seen": 26000,
+  "inserted": 25000,
+  "duplicates": 0,
+  "failed": 1000,
+  "seconds": 67.361,
+  "rss_mb": 68.2,
+  "errors": [
+    {
+      "path": "<batch>",
+      "error": "UnicodeEncodeError: 'utf-8' codec can't encode character '\\udca0' in position 14: surrogates not allowed"
+    }
+  ]
+}

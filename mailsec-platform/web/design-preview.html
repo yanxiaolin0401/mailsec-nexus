@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>MailSec Nexus · 视觉方案预览</title>
+  <style>
+    :root {
+      font-family: Inter, "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-synthesis: none;
+      --radius: 14px;
+      --shadow: 0 12px 36px rgba(20, 39, 67, .055);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    svg { display: block; }
+    .app {
+      --canvas: #f5f7fb;
+      --surface: #fff;
+      --surface-alt: #f8faff;
+      --ink: #16243d;
+      --muted: #738198;
+      --line: #e6eaf2;
+      --brand: #4267ea;
+      --brand-soft: #eef2ff;
+      --success: #087d59;
+      --success-soft: #e5f7ef;
+      --warning: #b56813;
+      --warning-soft: #fff5e3;
+      --danger: #c13f52;
+      --danger-soft: #fff0f1;
+      --rail: #14263e;
+      --rail-ink: #d5e1f1;
+      --rail-muted: #8293aa;
+      --rail-active: #2d4665;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--canvas);
+      transition: background .22s, color .22s;
+    }
+    .app[data-theme="soc"] {
+      --canvas: #0a131e;
+      --surface: #101e2c;
+      --surface-alt: #142535;
+      --ink: #eaf4fb;
+      --muted: #93a9b9;
+      --line: #294052;
+      --brand: #48dccb;
+      --brand-soft: #123a42;
+      --success: #53d5aa;
+      --success-soft: #173a38;
+      --warning: #f0bb65;
+      --warning-soft: #40321e;
+      --danger: #fa8290;
+      --danger-soft: #442a35;
+      --rail: #07111b;
+      --rail-ink: #d0e5ef;
+      --rail-muted: #8199aa;
+      --rail-active: #12343c;
+      --shadow: 0 16px 42px rgba(0, 0, 0, .18);
+    }
+    .app[data-theme="focus"] {
+      --canvas: #f7f8f7;
+      --surface: #fff;
+      --surface-alt: #f8faf9;
+      --ink: #172c2b;
+      --muted: #73827f;
+      --line: #e2e8e5;
+      --brand: #087d70;
+      --brand-soft: #e4f5ef;
+      --success: #087d59;
+      --success-soft: #e4f5ed;
+      --warning: #a3691a;
+      --warning-soft: #fff4de;
+      --danger: #bb4c52;
+      --danger-soft: #fff0ef;
+      --rail: #fff;
+      --rail-ink: #344d49;
+      --rail-muted: #879893;
+      --rail-active: #e4f5ef;
+      --shadow: 0 8px 30px rgba(21, 49, 41, .035);
+    }
+    .preview-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 11px clamp(18px, 3vw, 44px);
+      color: #e7f5ff;
+      background: #0b1725;
+      border-bottom: 1px solid #263a4b;
+      font-size: 12px;
+      letter-spacing: .02em;
+    }
+    .preview-bar strong { color: #93f0dd; font-weight: 700; }
+    .preview-note { color: #a8bbca; }
+    .preview-note b { color: #fff; }
+    .theme-switcher { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+    .theme-switcher > span { margin-right: 5px; color: #a9bccc; }
+    .theme-btn {
+      color: #c3d2df;
+      background: #1b2b3b;
+      border: 1px solid #344a5a;
+      border-radius: 999px;
+      padding: 7px 11px;
+      white-space: nowrap;
+      transition: .2s;
+    }
+    .theme-btn:hover, .theme-btn:focus-visible { border-color: #75e1cf; color: white; }
+    .theme-btn[aria-pressed="true"] { color: #09241f; background: #85ead7; border-color: #85ead7; font-weight: 700; }
+    .layout { display: grid; grid-template-columns: 238px minmax(0, 1fr); min-height: calc(100vh - 55px); }
+    aside {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 27px 14px 19px;
+      background: var(--rail);
+      color: var(--rail-ink);
+      border-right: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 13px 31px; }
+    .brand-mark {
+      width: 35px; height: 35px; display: grid; place-items: center;
+      color: #fff; background: linear-gradient(145deg, #69d8eb, #475ae7);
+      border-radius: 11px; box-shadow: 0 5px 14px rgba(64, 104, 216, .22);
+    }
+    .brand-mark svg { width: 21px; }
+    .brand strong { display: block; font-size: 15px; letter-spacing: -.04em; }
+    .brand small { display: block; margin-top: 3px; color: var(--rail-muted); font-size: 10px; letter-spacing: .19em; }
+    .nav-title { padding: 0 13px 9px; color: var(--rail-muted); font-size: 10px; letter-spacing: .18em; font-weight: 800; }
+    nav { display: grid; gap: 5px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 11px; min-height: 41px;
+      padding: 0 12px; border: 0; border-radius: 9px; background: transparent;
+      color: var(--rail-ink); text-decoration: none; font-size: 12px; font-weight: 600;
+    }
+    .nav-item svg { width: 17px; height: 17px; color: var(--rail-muted); flex: none; }
+    .nav-item.active { color: #fff; background: var(--rail-active); }
+    .nav-item.active svg { color: #86e5e7; }
+    .app[data-theme="focus"] .nav-item.active { color: var(--brand); }
+    .nav-item:hover { background: var(--rail-active); }
+    .nav-item em { margin-left: auto; color: var(--rail-muted); font-size: 10px; font-style: normal; font-weight: 500; }
+    .nav-divider { height: 1px; background: rgba(141, 165, 180, .16); margin: 22px 12px; }
+    .rail-bottom { margin-top: auto; padding: 20px 11px 0; color: var(--rail-muted); }
+    .rail-bottom .env { font-size: 10px; line-height: 1.6; }
+    .rail-bottom .env::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #f2bb60; }
+    .rail-bottom .version { margin-top: 10px; font-size: 10px; }
+    main { min-width: 0; padding: 0 clamp(20px, 3vw, 48px) 55px; }
+    .topbar { height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+    .breadcrumbs { display: flex; gap: 9px; color: var(--muted); font-size: 11px; }
+    .breadcrumbs strong { color: var(--ink); font-weight: 700; }
+    .top-actions { display: flex; align-items: center; gap: 13px; }
+    .demo-chip { color: var(--warning); background: var(--warning-soft); padding: 6px 9px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .avatar {
+      display: grid; place-items: center; width: 31px; height: 31px;
+      border: 1px solid var(--line); border-radius: 50%; color: var(--brand);
+      background: var(--brand-soft); font-size: 11px; font-weight: 800;
+    }
+    .identity { font-size: 11px; font-weight: 700; }
+    .identity small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; font-weight: 500; }
+    .intro { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; margin: 32px 0 23px; }
+    .eyebrow { color: var(--brand); font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    h1 { margin: 8px 0 8px; font-size: clamp(24px, 2.5vw, 31px); line-height: 1.3; letter-spacing: -.04em; }
+    .intro p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .outline-btn {
+      border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+      padding: 9px 12px; border-radius: 9px; font-size: 11px; font-weight: 700;
+      white-space: nowrap; box-shadow: var(--shadow);
+    }
+    .outline-btn:hover, .outline-btn:focus-visible { border-color: var(--brand); }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+    .metric, .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .metric { min-height: 111px; padding: 18px 18px 14px; }
+    .metric-top { display: flex; justify-content: space-between; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 600; }
+    .metric-icon { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 8px; color: var(--brand); background: var(--brand-soft); }
+    .metric-icon svg { width: 14px; height: 14px; }
+    .metric-value { margin-top: 10px; color: var(--ink); font-size: 26px; font-weight: 750; letter-spacing: -.04em; }
+    .metric-foot { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .metric-foot span { color: var(--success); font-weight: 700; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(225px, .7fr); gap: 16px; margin-top: 17px; }
+    .panel { min-width: 0; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 22px 0; }
+    h2 { margin: 0; font-size: 14px; letter-spacing: -.02em; }
+    .panel-header small { color: var(--muted); font-size: 10px; }
+    .search-panel { padding-bottom: 18px; }
+    .search-lead { padding: 9px 22px 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .search-box { display: flex; align-items: center; gap: 11px; margin: 17px 22px 0; padding: 6px 6px 6px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-alt); }
+    .search-box svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+    .search-box input { width: 100%; min-width: 0; padding: 7px 0; outline: 0; color: var(--ink); background: transparent; border: 0; font-size: 12px; }
+    .search-box input::placeholder { color: var(--muted); opacity: .8; }
+    .search-box button { flex: none; border: 0; border-radius: 6px; padding: 9px 13px; color: white; background: var(--brand); font-size: 10px; font-weight: 700; cursor: not-allowed; opacity: .75; }
+    .app[data-theme="soc"] .search-box button { color: #09201f; }
+    .filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding: 12px 22px 0; }
+    .filter-row span { color: var(--muted); font-size: 10px; margin-right: 3px; }
+    .filter-row b { padding: 6px 8px; color: var(--muted); background: var(--surface-alt); border: 1px solid var(--line); border-radius: 5px; font-size: 9px; font-weight: 600; }
+    .table-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 24px 22px 0; padding-bottom: 11px; border-bottom: 1px solid var(--line); }
+    .table-title strong { font-size: 12px; }
+    .table-title small { color: var(--muted); font-size: 10px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+    th { padding: 12px 11px; color: var(--muted); font-size: 9px; font-weight: 700; }
+    td { padding: 13px 11px; border-top: 1px solid var(--line); font-size: 10px; }
+    th:first-child, td:first-child { padding-left: 22px; }
+    th:last-child, td:last-child { padding-right: 22px; }
+    .subject { display: block; max-width: 225px; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+    .subtext { display: block; margin-top: 5px; color: var(--muted); font-size: 9px; }
+    .badge { display: inline-block; padding: 5px 7px; border-radius: 5px; font-size: 9px; font-weight: 700; }
+    .badge.danger { color: var(--danger); background: var(--danger-soft); }
+    .badge.warn { color: var(--warning); background: var(--warning-soft); }
+    .badge.safe { color: var(--success); background: var(--success-soft); }
+    .side-stack { display: grid; align-content: start; gap: 16px; }
+    .signal-panel { padding-bottom: 20px; }
+    .signal-list { padding: 15px 21px 0; }
+    .signal { display: flex; align-items: center; gap: 9px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .signal:last-child { border-bottom: 0; }
+    .signal-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--brand); }
+    .signal-dot.red { background: var(--danger); }
+    .signal-dot.amber { background: var(--warning); }
+    .signal-copy { min-width: 0; flex: 1; }
+    .signal-copy strong { display: block; font-size: 10px; }
+    .signal-copy small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .signal time { align-self: flex-start; color: var(--muted); font-size: 9px; }
+    .module-panel { padding: 19px 21px 20px; background: linear-gradient(145deg, var(--surface), var(--surface-alt)); }
+    .module-panel p { margin: 8px 0 16px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+    .module-line { display: flex; justify-content: space-between; gap: 8px; padding: 11px 0; border-top: 1px solid var(--line); font-size: 10px; font-weight: 650; }
+    .module-line span:last-child { color: var(--muted); font-weight: 500; }
+    .app[data-theme="focus"] aside { border-right-color: var(--line); }
+    .app[data-theme="focus"] .intro { margin-top: 45px; margin-bottom: 30px; }
+    .app[data-theme="focus"] .metric { box-shadow: none; }
+    .app[data-theme="focus"] .search-panel { border-color: #d5e6dd; box-shadow: 0 14px 42px rgba(4, 82, 68, .065); }
+    .app[data-theme="focus"] .search-box { padding-top: 10px; padding-bottom: 10px; }
+    .app[data-theme="soc"] .brand-mark { background: linear-gradient(145deg, #3de2c5, #276d81); }
+    .app[data-theme="soc"] .metric:first-child { border-color: #1b6b6c; }
+    .app[data-theme="soc"] .signal-panel { border-color: #244758; }
+    .modal[hidden] { display: none; }
+    .modal { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; padding: 18px; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(4, 13, 24, .72); }
+    .login-card { position: relative; width: min(100%, 410px); padding: 28px; border-radius: 19px; border: 1px solid var(--line); color: var(--ink); background: var(--surface); box-shadow: 0 24px 65px rgba(0,0,0,.22); }
+    .modal-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .modal-top .brand-mark { width: 40px; height: 40px; }
+    .close { border: 0; background: var(--surface-alt); color: var(--muted); width: 28px; height: 28px; border-radius: 7px; font-size: 18px; }
+    .login-card h2 { margin: 23px 0 5px; font-size: 22px; }
+    .login-card p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .login-tabs { display: grid; grid-template-columns: 1fr 1fr; margin: 22px 0; padding: 4px; border-radius: 9px; background: var(--surface-alt); border: 1px solid var(--line); }
+    .login-tabs button { border: 0; border-radius: 6px; padding: 10px; color: var(--muted); background: transparent; font-size: 11px; font-weight: 700; }
+    .login-tabs button[aria-selected="true"] { color: var(--brand); background: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .login-card label { display: block; margin: 15px 0 6px; font-size: 10px; font-weight: 700; }
+    .login-card input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; outline: none; color: var(--ink); background: var(--surface-alt); font-size: 11px; }
+    .login-card input:focus { border-color: var(--brand); }
+    .login-card .submit-demo { width: 100%; margin-top: 20px; padding: 12px; border: 0; border-radius: 8px; color: #fff; background: var(--brand); font-size: 11px; font-weight: 700; cursor: not-allowed; opacity: .75; }
+    .app[data-theme="soc"] .login-card .submit-demo { color: #09201f; }
+    .login-card .login-disclaimer { margin-top: 13px; text-align: center; color: var(--warning); font-size: 10px; }
+    :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+    @media (max-width: 1120px) {
+      .workspace { grid-template-columns: 1fr; }
+      .side-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 74px minmax(0,1fr); }
+      aside { padding-left: 9px; padding-right: 9px; }
+      .brand { justify-content: center; padding: 0 0 24px; }
+      .brand-text, .nav-title, .nav-item span, .nav-item em, .rail-bottom { display: none; }
+      .nav-item { justify-content: center; padding: 0; }
+      .nav-divider { margin: 15px 10px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 600px) {
+      .preview-bar { align-items: flex-start; flex-direction: column; gap: 9px; padding: 10px 13px; }
+      .preview-note { font-size: 11px; }
+      .theme-switcher { width: 100%; }
+      .theme-switcher > span { display: none; }
+      .theme-btn { flex: 1; padding: 7px 5px; font-size: 10px; }
+      .layout { display: block; }
+      aside { display: block; padding: 8px 11px; border-right: 0; border-bottom: 1px solid var(--line); overflow: auto; }
+      .brand, .nav-divider, .rail-bottom { display: none; }
+      nav { display: flex; width: max-content; gap: 4px; }
+      .nav-item { width: auto; min-height: 35px; padding: 0 9px; gap: 5px; white-space: nowrap; }
+      .nav-item svg { width: 14px; height: 14px; }
+      .nav-item span { display: inline; font-size: 10px; }
+      main { padding: 0 13px 35px; }
+      .topbar { height: 53px; }
+      .demo-chip { display: none; }
+      .identity { font-size: 10px; }
+      .intro, .app[data-theme="focus"] .intro { margin: 25px 0 18px; align-items: flex-start; }
+      .intro h1 { font-size: 23px; }
+      .intro p { font-size: 10px; }
+      .outline-btn { padding: 8px; font-size: 10px; }
+      .metrics { gap: 8px; }
+      .metric { min-height: 92px; padding: 12px; }
+      .metric-value { font-size: 21px; }
+      .workspace { gap: 9px; margin-top: 9px; }
+      .side-stack { grid-template-columns: 1fr; gap: 9px; }
+      .panel-header { padding: 16px 14px 0; }
+      .search-lead { padding: 7px 14px 0; }
+      .search-box { margin: 14px 14px 0; }
+      .filter-row { padding: 10px 14px 0; }
+      .table-title { margin: 19px 14px 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app" data-theme="enterprise">
+  <header class="preview-bar">
+    <div class="preview-note"><strong>视觉方案预览</strong>　·　<b>全部为演示数据</b>　·　未连接后端、不可执行查询或登录</div>
+    <div class="theme-switcher" role="group" aria-label="切换视觉方案">
+      <span>选择风格</span>
+      <button class="theme-btn" type="button" data-set-theme="enterprise" aria-pressed="true">A · 企业控制台</button>
+      <button class="theme-btn" type="button" data-set-theme="soc" aria-pressed="false">B · 深色 SOC</button>
+      <button class="theme-btn" type="button" data-set-theme="focus" aria-pressed="false">C · 搜索优先</button>
+    </div>
+  </header>
+  <div class="layout">
+    <aside aria-label="演示导航">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8 12 3l8 5v8l-8 5-8-5V8Z" stroke="currentColor" stroke-width="1.7"/><path d="m5 9 7 5 7-5M12 14v6" stroke="currentColor" stroke-width="1.7"/></svg></div>
+        <div class="brand-text"><strong>MailSec Nexus</strong><small>SECURITY PLATFORM</small></div>
+      </div>
+      <div class="nav-title">工作空间</div>
+      <nav aria-label="模块布局预览">
+        <div class="nav-item active" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>安全总览</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><span>智能检索</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 3h10l4 4v14H5zM15 3v5h4M8 12h8M8 16h8"/></svg><span>头部解析</span><em>未接入</em></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2 4 6v5c0 5.3 3 9.1 8 11 5-1.9 8-5.7 8-11V6l-8-4Z"/><path d="m8 12 3 3 5-6"/></svg><span>威胁溯源</span><em>未接入</em></div>
+      </nav>
+      <div class="nav-divider"></div>
+      <div class="nav-title">系统</div>
+      <nav aria-label="系统布局预览"><div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>管理中心</span><em>未接入</em></div></nav>
+      <div class="rail-bottom"><div class="env">演示环境 · 无实时数据</div><div class="version">DESIGN PREVIEW / 2026</div></div>
+    </aside>
+    <main>
+      <div class="topbar">
+        <div class="breadcrumbs"><span>工作空间</span><span>/</span><strong>安全总览</strong></div>
+        <div class="top-actions"><span class="demo-chip">静态设计稿</span><button class="outline-btn" id="openLogin" type="button">预览登录窗口</button><div class="avatar" aria-hidden="true">MS</div><div class="identity">演示账户<small>无真实会话</small></div></div>
+      </div>
+      <section class="intro">
+        <div><div class="eyebrow">SECURITY OVERVIEW / 视觉演示</div><h1>邮件安全，一目了然。</h1><p>聚合检索、风险研判与平台管理的统一工作台。以下指标和邮件均为虚构示例。</p></div>
+      </section>
+      <section class="metrics" aria-label="演示状态摘要">
+        <div class="metric"><div class="metric-top"><span>今日处理邮件</span><span class="metric-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18v12H3zM3 8l9 6 9-6"/></svg></span></div><div class="metric-value">12,847</div><div class="metric-foot"><span>+8.2%</span>　演示趋势</div></div>
+        <div class="metric"><div class="metric-top"><span>待核查风险</span><span class="metric-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 10 19H2L12 2ZM12 9v5m0 3v1"/></svg></span></div><div class="metric-value">38</div><div class="metric-foot">其中高危 <span>6</span> 封 · 演示</div></div>
+        <div class="metric"><div class="metric-top"><span>已拦截威胁</span><span class="metric-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 6v5c0 5 3 9 8 11 5-2 8-6 8-11V6l-8-4Z"/><path d="m8 12 3 3 5-6"/></svg></span></div><div class="metric-value">214</div><div class="metric-foot">示例防护统计</div></div>
+        <div class="metric"><div class="metric-top"><span>检索响应</span><span class="metric-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 9 9M12 7v5l4 2"/></svg></span></div><div class="metric-value">0.42<span style="font-size:13px">s</span></div><div class="metric-foot">设计占位值 · 非实测</div></div>
+      </section>
+      <div class="workspace">
+        <section class="panel search-panel" aria-labelledby="search-heading">
+          <div class="panel-header"><h2 id="search-heading">智能邮件检索</h2><small>SMART SEARCH · 演示布局</small></div>
+          <div class="search-lead">跨主题、发件人、收件人和正文定位可疑邮件。预览页不会向服务器发送查询。</div>
+          <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input type="text" placeholder="例如：异常登录通知、可疑域名、发件人…" aria-label="演示搜索输入，不会提交" autocomplete="off"><button type="button" disabled>检索 · 预览</button></div>
+          <div class="filter-row" aria-label="示例筛选条件"><span>筛选示例</span><b>近 7 天</b><b>全部风险级别</b><b>全部收件域</b></div>
+          <div class="table-title"><strong>示例邮件结果</strong><small>演示数据 · 非查询结果</small></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>邮件主题 / 发件人</th><th>收件人</th><th>时间</th><th>风险等级</th></tr></thead>
+              <tbody>
+                <tr><td><span class="subject">请确认您的账户登录信息</span><span class="subtext">notice@secure-example.test</span></td><td>finance@example.test</td><td>10:42</td><td><span class="badge danger">高风险</span></td></tr>
+                <tr><td><span class="subject">第三季度项目资料更新</span><span class="subtext">team@internal.example.test</span></td><td>ops@example.test</td><td>09:18</td><td><span class="badge safe">低风险</span></td></tr>
+                <tr><td><span class="subject">付款通知与附件确认</span><span class="subtext">billing@vendor-example.test</span></td><td>finance@example.test</td><td>昨日</td><td><span class="badge warn">待核查</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <div class="side-stack">
+          <section class="panel signal-panel" aria-labelledby="signals-heading">
+            <div class="panel-header"><h2 id="signals-heading">最新安全动态</h2><small>模拟</small></div>
+            <div class="signal-list">
+              <div class="signal"><span class="signal-dot red"></span><span class="signal-copy"><strong>高风险邮件待复核</strong><small>疑似仿冒登录页面</small></span><time>10:42</time></div>
+              <div class="signal"><span class="signal-dot amber"></span><span class="signal-copy"><strong>域名信誉需要检查</strong><small>外部发件域异常</small></span><time>09:56</time></div>
+              <div class="signal"><span class="signal-dot"></span><span class="signal-copy"><strong>检索索引状态示例</strong><small>此处不代表真实运行状态</small></span><time>08:30</time></div>
+            </div>
+          </section>
+          <section class="panel module-panel" aria-labelledby="modules-heading">
+            <h2 id="modules-heading">模块接入路线</h2>
+            <p>这里展示未来模块入口层级；当前视觉预览不连接任何服务。</p>
+            <div class="module-line"><span>智能检索</span><span>后端待接入</span></div>
+            <div class="module-line"><span>头部解析</span><span>接口占位</span></div>
+            <div class="module-line"><span>威胁溯源</span><span>接口占位</span></div>
+            <div class="module-line"><span>统一管理</span><span>界面待实现</span></div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="login-card">
+      <div class="modal-top"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8 12 3l8 5v8l-8 5-8-5V8Z" stroke="currentColor" stroke-width="1.7"/><path d="m5 9 7 5 7-5M12 14v6" stroke="currentColor" stroke-width="1.7"/></svg></div><button class="close" type="button" aria-label="关闭登录预览" data-close-modal>×</button></div>
+      <h2 id="loginTitle">欢迎使用 MailSec Nexus</h2><p>统一身份入口的界面预览，不会验证账号或保存输入。</p>
+      <div class="login-tabs" role="tablist" aria-label="登录角色预览"><button type="button" role="tab" aria-selected="true" data-login-role="user">用户登录</button><button type="button" role="tab" aria-selected="false" data-login-role="admin">管理员登录</button></div>
+      <div id="roleDescription" class="eyebrow">租户工作空间 · 预览</div>
+      <label for="previewEmail">邮箱地址</label><input id="previewEmail" type="email" placeholder="name@example.com" autocomplete="off">
+      <label for="previewPassword">密码</label><input id="previewPassword" type="password" placeholder="仅为界面占位" autocomplete="off">
+      <button class="submit-demo" type="button" disabled>登录功能未接入</button>
+      <p class="login-disclaimer">静态设计预览 · 请勿输入真实账号密码</p>
+    </div>
+  </div>
+</div>
+<script>
+  (() => {
+    const app = document.getElementById('app');
+    const modal = document.getElementById('loginModal');
+    const openButton = document.getElementById('openLogin');
+    const roleDescription = document.getElementById('roleDescription');
+
+    document.querySelectorAll('[data-set-theme]').forEach(button => {
+      button.addEventListener('click', () => {
+        app.dataset.theme = button.dataset.setTheme;
+        document.querySelectorAll('[data-set-theme]').forEach(choice => {
+          choice.setAttribute('aria-pressed', String(choice === button));
+        });
+      });
+    });
+
+    openButton.addEventListener('click', () => {
+      modal.hidden = false;
+      modal.querySelector('.close').focus();
+    });
+    const closeModal = () => {
+      modal.hidden = true;
+      document.getElementById('previewEmail').value = '';
+      document.getElementById('previewPassword').value = '';
+      openButton.focus();
+    };
+    modal.querySelectorAll('[data-close-modal]').forEach(element => element.addEventListener('click', closeModal));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !modal.hidden) closeModal();
+    });
+    modal.querySelectorAll('[data-login-role]').forEach(button => {
+      button.addEventListener('click', () => {
+        modal.querySelectorAll('[data-login-role]').forEach(choice => {
+          choice.setAttribute('aria-selected', String(choice === button));
+        });
+        roleDescription.textContent = button.dataset.loginRole === 'admin'
+          ? '平台管理空间 · 预览'
+          : '租户工作空间 · 预览';
+      });
+    });
+  })();
+</script>
+</body>
+</html>

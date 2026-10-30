@@ -1,0 +1,5 @@
+# Real public email can contain PII and malicious content. Never commit samples.
+raw/
+.downloads/
+manifests/*.files.jsonl
+*.log

@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开题汇报：基于大模型的邮件数据分析与智能检索系统开发</title>
+    <style>
+        :root {
+            --primary: #103672;
+            --primary-light: #1e4b8f;
+            --accent: #2563eb;
+            --accent-soft: #eff6ff;
+            --bg-page: #0f172a;
+            --slide-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --code-bg: #0f172a;
+            --tag-bg: #e0e7ff;
+            --tag-text: #3730a3;
+            --success: #16a34a;
+            --warning: #d97706;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 顶部进度条 */
+        .progress-bar-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.15);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 10%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 幻灯片视口 */
+        .presentation-viewport {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        /* 单张幻灯片卡片 (固定 16:9 比例) */
+        .slide {
+            width: 1280px;
+            height: 720px;
+            max-width: calc(100vw - 48px);
+            max-height: calc(100vh - 48px);
+            background: var(--slide-bg);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            position: absolute;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.96) translateY(12px);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 40px 54px 36px;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            z-index: 10;
+        }
+
+        /* 幻灯片头部 */
+        .slide-header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 14px;
+        }
+
+        .slide-tag {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .slide-tag::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .slide-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .slide-subtitle {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .header-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            background: #f8fafc;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            font-weight: 500;
+        }
+
+        /* 幻灯片主体内容 */
+        .slide-body {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            user-select: text;
+        }
+
+        /* 栅格布局辅助 */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 22px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card.highlight {
+            background: #f8fafc;
+            border-left: 4px solid var(--primary);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card p, .card li {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #334155;
+            margin-bottom: 7px;
+        }
+
+        .card ul {
+            padding-left: 18px;
+        }
+
+        /* 流程线框图 */
+        .pipeline-box {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12px;
+            color: #0f172a;
+            margin: 8px 0 12px;
+            line-height: 1.5;
+        }
+
+        .pipeline-step {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* 代码容器 */
+        .code-container {
+            background: var(--code-bg);
+            color: #f8fafc;
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 11.5px;
+            line-height: 1.5;
+            overflow-x: auto;
+            flex: 1;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .code-keyword { color: #f43f5e; font-weight: 600; }
+        .code-header { color: #38bdf8; font-weight: 600; }
+        .code-comment { color: #94a3b8; font-style: italic; }
+        .code-string { color: #a3e635; }
+        .code-highlight { background: rgba(56, 189, 248, 0.15); padding: 2px 4px; border-radius: 4px; }
+
+        /* 表格样式 */
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-custom th {
+            background: var(--primary);
+            color: #ffffff;
+            text-align: left;
+            padding: 9px 12px;
+            font-weight: 600;
+        }
+
+        .table-custom td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: #334155;
+            vertical-align: top;
+            line-height: 1.45;
+        }
+
+        .table-custom tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-green { background: #dcfce7; color: #166534; }
+
+        /* 底部状态 */
+        .slide-footer {
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .nav-controls {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            color: #ffffff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent);
+            transform: scale(1.08);
+        }
+
+        .page-counter {
+            color: #e2e8f0;
+            font-size: 13.5px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .nav-hint {
+            color: #94a3b8;
+            font-size: 11.5px;
+            margin-left: 4px;
+        }
+
+        .cover-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 60px 80px;
+            background: radial-gradient(circle at center top, #ffffff, #f1f5f9);
+        }
+
+        .cover-org {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .cover-title {
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--primary);
+            line-height: 1.25;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+
+        .cover-desc {
+            font-size: 17px;
+            color: #475569;
+            max-width: 800px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .cover-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 860px;
+        }
+
+        .cover-meta-box {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: left;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .cover-meta-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .cover-meta-val {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .fs-toggle {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .fs-toggle:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div class="presentation-viewport">
+
+    <!-- Slide 1: 封面 -->
+    <div class="slide cover-slide active" data-slide="1">
+        <div class="cover-org">
+            <span>🛡️ 安恒信息 × 杭州电子科技大学</span>
+            <span>· 创新实践课程</span>
+        </div>
+        <h1 class="cover-title">基于大模型的邮件数据分析与<br>智能检索系统开发</h1>
+        <p class="cover-desc">面向海量离线邮件场景，摆脱外部中台依赖，构建轻量化、自主可控、工业级稳定的存储检索与大模型研判系统</p>
+        <div class="cover-meta-grid">
+            <div class="cover-meta-box">
+                <div class="cover-meta-label">项目周期</div>
+                <div class="cover-meta-val">5 周里程碑实践</div>
+            </div>
+            <div class="cover-meta-box">
+                <div class="cover-meta-label">技术栈选型</div>
+                <div class="cover-meta-val">Python 3.12 · ClickHouse · LLM</div>
+            </div>
+            <div class="cover-meta-box">
+                <div class="cover-meta-label">指导团队</div>
+                <div class="cover-meta-val">企业导师端 (云产品线)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: 系统架构方案参考 -->
+    <div class="slide" data-slide="2">
+        <div class="slide-header">
+            <div>
+                <div class="slide-tag">Architecture Options</div>
+                <div class="slide-title">一、 系统架构方案设计参考</div>
+                <div class="slide-subtitle">摆脱外部大数据中台依赖，根据团队精力自主选型（单进程直写 或 队列解耦）</div>
+            </div>
+            <div class="header-meta">架构选型参考</div>
+        </div>
+        <div class="slide-body">
+            <div class="grid-2">
+                <div class="card highlight">
+                    <div class="card-title">🚀 方案 A：极简轻量直写流水线（轻量推荐）</div>
+                    <div class="pipeline-box">
+                        <span class="pipeline-step">客户端/测试样本</span><br>
+                        ↓ [SMTP:25 端口 / HTTP:8080 端口]<br>
+                        <span class="pipeline-step">接收与流式解析引擎</span> (RFC 5322 MIME 拆解)<br>
+                        ↓ [提取结构化数据]<br>
+                        <span class="pipeline-step">内存批量写入缓冲池</span> (In-Memory Batch Pool)<br>
+                        ↓ [Batch Insert (满 2000 条或 2 秒)]<br>
+                        <span class="pipeline-step">ClickHouse 存储引擎</span>
+                    </div>
+                    <p><strong>方案特点：</strong>零外部中间件依赖，单工程即可跑起闭环。通过进程内队列批量合并写入，足以平稳支撑 10 万封邮件导入，开发难度与运维成本最低。</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">⚡ 方案 B：消息队列解耦流水线（进阶可选）</div>
+                    <div class="pipeline-box">
+                        <span class="pipeline-step">客户端投递端点</span> (接收邮件原文)<br>
+                        ↓ [投递 raw_mail]<br>
+                        <span class="pipeline-step">消息中间件</span> (Kafka / Redis Stream 削峰)<br>
+                        ↓ [Consumer Workers 消费]<br>
+                        <span class="pipeline-step">多进程并发解析清洗</span><br>
+                        ↓ [批量写入]<br>
+                        <span class="pipeline-step">ClickHouse 存储引擎</span>
+                    </div>
+                    <p><strong>方案特点：</strong>接收端与解析端彻底解耦，抗突发并发流量，天然支持水平扩展与故障重放。<strong>注：Kafka/Redis 为可选扩展，不作强制要求。</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>统一查询层：通过 CLI 工具或 Web 界面发起请求，FastAPI 调用 ClickHouse 检索与 LLM 分析</span>
+            <span>安恒信息 · 企业导师开题讲解</span>
+        </div>
+    </div>
+
+    <!-- Slide 3: 邮件格式认知：常用头与 Body 组织形态 -->
+    <div class="slide" data-slide="3">
+        <div class="slide-header">
+            <div>
+                <div class="slide-tag">Eml Format & MIME</div>
+                <div class="slide-title">二、 邮件格式认知：常用头与 Body 组织形态</div>
+                <div class="slide-subtitle">理解 RFC 5322 / MIME 规范，掌握数据存储字段映射逻辑</div>
+            </div>
+            <div class="header-meta">规范：RFC 5322 · RFC 2045-2049</div>
+        </div>
+        <div class="slide-body">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">📋 1. 核心邮件头（Headers）IETF RFC 官方定义与解析关注点</div>
+                    <table class="table-custom" style="font-size: 11px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 26%;">标准邮件头 (RFC规范)</th>
+                                <th style="width: 37%;">IETF RFC 官方规范定义</th>
+                                <th style="width: 37%;">工程解析与安全关注点</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong><code>Received</code></strong><br>
+                                    <span style="color:#64748b; font-size:10px;">RFC 5322 §3.6.7<br>RFC 5321 §4.4 (Trace)</span>
+                                </td>
+                                <td><strong>传输追踪字段（Trace Field）</strong><br>由传输代理 (MTA) 逐跳在顶部追加，记录中继节点、客户端主机标识及接收时间戳。</td>
+                                <td>逆向回溯投递链路；最靠近收件端的外部边界网关记录，用于提取真实公网来源 IP。</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong><code>Authentication-Results</code></strong><br>
+                                    <span style="color:#64748b; font-size:10px;">RFC 8601 (Message Auth)</span>
+                                </td>
+                                <td><strong>消息认证状态头</strong><br>记录边界接收网关对邮件执行 SPF、DKIM、DMARC 密码学与源地址校验的综合判定结论。</td>
+                                <td>提取结构化认证结论（如 <code>spf=fail</code>、<code>dkim=none</code>），作为发件人仿冒与域欺诈判定的核心依据。</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong><code>From</code></strong><br>
+                                    <span style="color:#64748b; font-size:10px;">RFC 5322 §3.6.2 (Originator)</span>
+                                </td>
+                                <td><strong>消息始发者邮箱（Author Mailbox）</strong><br>指定对编写该消息负责的实体（人或系统）的邮箱地址。</td>
+                                <td>属于应用层显示头，极易被信封伪造；需提取纯域名并与 <code>Received</code> 来源 IP 交叉比对。</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong><code>To</code> / <code>Cc</code></strong><br>
+                                    <span style="color:#64748b; font-size:10px;">RFC 5322 §3.6.3 (Destination)</span>
+                                </td>
+                                <td><strong>目标接收者列表（Destinations）</strong><br><code>To</code> 指定主要收件人，<code>Cc</code> 指定抄送（Carbon Copy）感兴趣方的收件人列表。</td>
+                                <td>结构化拆解为数组入库，用于审计收件范围、识别异常大批量群发或无收件人隐匿行为。</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong><code>Date</code> / <code>Subject</code></strong><br>
+                                    <span style="color:#64748b; font-size:10px;">RFC 5322 §3.6.1 / §3.6.5</span>
+                                </td>
+                                <td><strong>发端时间戳与主题摘要</strong><br><code>Date</code> 标识消息创建就绪时间；<code>Subject</code> 提供简要概述消息核心内容的文本描述。</td>
+                                <td><code>Date</code> 作为时序主轴与 ClickHouse 按月分区键；<code>Subject</code> 需执行 RFC 2047 字符集转码。</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong><code>Message-ID</code></strong><br>
+                                    <span style="color:#64748b; font-size:10px;">RFC 5322 §3.6.4 (Identifier)</span>
+                                </td>
+                                <td><strong>全局消息唯一标识符</strong><br>用于在机器层面全局唯一标识该邮件特定版本的格式化字符串 <code>&lt;id@domain&gt;</code>。</td>
+                                <td>作为入库全局去重键与日志关联索引，防止同一封邮件重复写入或循环投递。</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong><code>Content-Type</code></strong><br>
+                                    <span style="color:#64748b; font-size:10px;">RFC 2045 §5 (MIME Headers)</span>
+                                </td>
+                                <td><strong>媒体类型与编码规范描述</strong><br>声明正文数据类型（Type/Subtype）、字符集编码（charset）及多部分分段标界（boundary）。</td>
+                                <td>指导解析器流式构建 MIME 树；提取附件文件名与分段 boundary，防范嵌套递归栈溢出。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📦 2. 邮件体（Body）的常见 MIME 形态</div>
+                    <ul>
+                        <li><strong>单部分纯文本（<code>text/plain</code> 或 <code>text/html</code>）：</strong><br>
+                            邮件无附件、无备选视图，正文直接位于头后空行下方，通常经 Quoted-Printable 或 Base64 编码。
+                        </li>
+                        <li><strong>多部分替代（<code>multipart/alternative</code>）：</strong><br>
+                            一封邮件内同时提供纯文本与 HTML 两个版本，客户端根据能力选其一渲染。解析时应优先提取纯文本。
+                        </li>
+                        <li><strong>多部分混合（<code>multipart/mixed</code>）：</strong><br>
+                            正文与独立附件的组合形式。每个 Part 用 boundary 隔离，附件 Part 带有 <code>Content-Disposition: attachment; filename="..."</code>。
+                        </li>
+                        <li><strong>多部分内嵌关联（<code>multipart/related</code>）：</strong><br>
+                            正文中内嵌图片、签名等资源（通过 <code>cid:xxx</code> 关联引用）。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="background:#f8fafc; border-radius:8px; padding:8px 16px; border:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <span style="font-size:12px; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:6px;">
+                    📚 官方协议规范查阅：
+                </span>
+                <div style="display:flex; gap:14px; font-size:11.5px; flex-wrap:wrap;">
+                    <a href="https://www.iana.org/assignments/message-headers/message-headers.xhtml" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">🔗 IANA 邮件头官方注册表</a>
+                    <a href="https://datatracker.ietf.org/doc/html/rfc5322" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">🔗 RFC 5322 (邮件格式标准)</a>
+                    <a href="https://datatracker.ietf.org/doc/html/rfc2045" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">🔗 RFC 2045 (MIME正文与编码)</a>
+                    <a href="https://datatracker.ietf.org/doc/html/rfc8601" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">🔗 RFC 8601 (认证防伪头规范)</a>
+                    <a href="https://datatracker.ietf.org/doc/html/rfc5321" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:600;">🔗 RFC 5321 (SMTP协议)</a>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>关键防线：禁止编写复杂嵌套正则提取头！遇到畸形与超长字段记录日志跳过，确保进程不崩溃</span>
+            <span>安恒信息 · 企业导师开题讲解</span>
+        </div>
+    </div>
+
+    <!-- Slide 4: ClickHouse 表结构与存储设计 -->
+    <div class="slide" data-slide="4">
+        <div class="slide-header">
+            <div>
+                <div class="slide-tag">Data Architecture</div>
+                <div class="slide-title">三、 ClickHouse 表结构与高性能存储设计</div>
+                <div class="slide-subtitle">面向列式存储特性设计，单引擎满足海量多维统计与检索</div>
+            </div>
+            <div class="header-meta">引擎选型：ClickHouse 单引擎</div>
+        </div>
+        <div class="slide-body">
+            <div class="grid-2">
+                <div class="code-container">
+<span class="code-keyword">CREATE TABLE</span> mail_records
+(
+    mail_id          <span class="code-header">String</span>,                  <span class="code-comment">-- 邮件唯一ID (Message-ID/MD5)</span>
+    send_time        <span class="code-header">DateTime</span>,                <span class="code-comment">-- 发送时间 (时序主轴)</span>
+    client_ip        <span class="code-header">IPv4</span>,                    <span class="code-comment">-- 溯源公网IP (从Received解析)</span>
+    from_addr        <span class="code-header">LowCardinality(String)</span>,  <span class="code-comment">-- 发件人地址</span>
+    from_domain      <span class="code-header">LowCardinality(String)</span>,  <span class="code-comment">-- 发件域名 (按域统计)</span>
+    to_addrs         <span class="code-header">Array(String)</span>,           <span class="code-comment">-- 收件人列表</span>
+    subject          <span class="code-header">String</span>,                  <span class="code-comment">-- 邮件主题</span>
+    body_text        <span class="code-header">String</span>,                  <span class="code-comment">-- 清洗后的纯文本正文</span>
+    has_attachment   <span class="code-header">UInt8</span>,                   <span class="code-comment">-- 是否含附件 (0/1)</span>
+    attachment_names <span class="code-header">Array(String)</span>,           <span class="code-comment">-- 附件名列表</span>
+    attachment_hashes <span class="code-header">Array(String)</span>,          <span class="code-comment">-- 附件哈希 (SHA256/MD5)</span>
+    spf_result       <span class="code-header">LowCardinality(String)</span>,  <span class="code-comment">-- pass / fail / none</span>
+    raw_headers      <span class="code-header">String</span>                   <span class="code-comment">-- 原始头留存 (供LLM分析)</span>
+)
+<span class="code-keyword">ENGINE</span> = MergeTree()
+<span class="code-keyword">PARTITION BY</span> toYYYYMM(send_time)              <span class="code-comment">-- 推荐按月分区</span>
+<span class="code-keyword">ORDER BY</span> (send_time, from_domain, mail_id);
+                </div>
+                <div class="card">
+                    <div class="card-title">⚡ 存储与写入优化要点</div>
+                    <ul>
+                        <li><strong>合理的分区策略（Partitioning）：</strong><br>
+                            推荐采用 <code>toYYYYMM(send_time)</code> 按月分区。过滤时间范围时能直接跳过整月数据分区，检索速度提升数十倍。
+                        </li>
+                        <li><strong>批量写入（Batch Insert）缓冲机制：</strong><br>
+                            ClickHouse 最忌讳单条频繁写入！必须在后台设计写入缓冲区（如累计 2000 条或满 2 秒执行一次批量 INSERT），避免产生大量小部件（Parts）写崩数据库。
+                        </li>
+                        <li><strong>低基数字典优化：</strong><br>
+                            域名、SPF 状态等字段使用 <code>LowCardinality</code>，大幅提升压缩比与过滤效率。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>单引擎足以覆盖需求；若组内精力充沛可自行扩展 ES 双引擎，不作强制</span>
+            <span>安恒信息 · 企业导师开题讲解</span>
+        </div>
+    </div>
+
+    <!-- Slide 5: 大模型双协议接入与健壮调用规范 -->
+    <div class="slide" data-slide="5">
+        <div class="slide-header">
+            <div>
+                <div class="slide-tag">LLM Protocols & Resilience</div>
+                <div class="slide-title">四、 大模型双协议接入与健壮调用规范</div>
+                <div class="slide-subtitle">支持 OpenAI / Anthropic 双协议，强化超时重试与工程级降级容错</div>
+            </div>
+            <div class="header-meta">协议兼容：OpenAI + Anthropic</div>
+        </div>
+        <div class="slide-body">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">🔌 1. 双协议标准支持</div>
+                    <p>后台模型模块需具备通用协议适配能力，支持无缝切换底层大模型服务：</p>
+                    <ul style="margin-bottom:12px;">
+                        <li><strong>OpenAI 协议格式：</strong>标准 <code>/v1/chat/completions</code> 接口规范；</li>
+                        <li><strong>Anthropic 协议格式：</strong>标准 <code>/v1/messages</code> 接口规范；</li>
+                        <li><strong>灵活参数配置：</strong>支持自定义配置 BaseURL、API Key 及特殊认证标头（Authorization Headers）；</li>
+                    </ul>
+                    <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; border:1px solid #e2e8f0; font-size:12px; color:#334155;">
+                        💡 <strong>参考指引：</strong><br>
+                        有兴趣的同学可参考开源项目 <a href="https://github.com/Blinue/Magpie" target="_blank" style="color:var(--accent); font-weight:600;">Magpie</a> 学习统一多模型协议网关与接口转发的设计思路（仅供扩展参考，不作强制）。
+                    </div>
+                </div>
+
+                <div class="card highlight">
+                    <div class="card-title">🛡️ 2. 接口超时重传与降级保护</div>
+                    <p>工业级系统严禁“裸调”外部大模型 API，必须内置网络防御机制：</p>
+                    <ul>
+                        <li><strong>硬超时截断（Timeout）：</strong>单次请求设置硬超时阈值（如 15 秒），拒绝网络拥塞时无休止挂起主线程；</li>
+                        <li><strong>指数退避重传（Retry）：</strong>遭遇网络抖动、429 速率限制或 500 远端错误时，自动触发重试机制（如最多重传 2 次）；</li>
+                        <li><strong>优雅降级兜底（Fallback）：</strong>当远端模型服务不可用时，系统平稳降级并返回友好默认提示，严禁引发主进程崩溃或影响底层检索核心功能；</li>
+                        <li><strong>凭证安全红线：</strong>代码仓库与提交记录中<strong>绝对禁止硬编码 API Key</strong>，必须通过系统环境变量或未纳入版本控制的本地配置文件注入。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>安全红线：代码仓库中绝对禁止硬编码 API Key，必须走环境变量注入</span>
+            <span>安恒信息 · 企业导师开题讲解</span>
+        </div>
+    </div>
+
+    <!-- Slide 6: 大模型核心应用场景与排查 SOP -->
+    <div class="slide" data-slide="6">
+        <div class="slide-header">
+            <div>
+                <div class="slide-tag">AI Features & SOP</div>
+                <div class="slide-title">五、 大模型核心应用场景与排查 SOP</div>
+                <div class="slide-subtitle">赋能自然语言检索，并将常见威胁分析固化为自动化排查流水线</div>
+            </div>
+            <div class="header-meta">功能设计：恶意研判 · NL2Query · 场景SOP</div>
+        </div>
+        <div class="slide-body">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">🎯 核心应用场景与指定功能</div>
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div>
+                            <p style="font-weight:700; color:var(--primary); font-size:14px; margin-bottom:4px;">🔹 功能 A：恶意邮件判定与威胁研判</p>
+                            <p style="font-size:12.5px; line-height:1.6; color:#475569; margin-bottom:0;">
+                                提取邮件发信域、正文纯文本摘要、发信路径真实性与可疑附件/链接特征，大模型输出标准化的结构化 JSON：明确给出<strong>风险等级</strong>（正常/可疑/恶意）、<strong>判定依据</strong>与识别到的<strong>具体攻击手法</strong>（如高仿发信人、社工引诱话术、诱饵附件）。
+                            </p>
+                        </div>
+                        <div>
+                            <p style="font-weight:700; color:var(--primary); font-size:14px; margin-bottom:4px;">🔹 功能 B：智能自然语言检索 (NL2Query)</p>
+                            <p style="font-size:12.5px; line-height:1.6; color:#475569; margin-bottom:0;">
+                                运维人员输入日常自然语言（如<em>“查询上周来自财务部门且带有发票附件的邮件”</em>），大模型负责理解业务语义，将其<strong>翻译生成 Elasticsearch 查询语句 (Query DSL) 或 ClickHouse SQL</strong>；亦可由后端服务直接执行生成的语句，向用户秒级返回匹配结果。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card highlight">
+                    <div class="card-title">⚡ 功能 C：常用查询排查 SOP（标准作业程序）</div>
+                    <div style="font-size:12.5px; line-height:1.65; color:#334155;">
+                        <p style="margin-bottom:8px;">
+                            <strong>· 什么是 SOP：</strong><br>
+                            即 Standard Operating Procedure（标准作业程序）。在网络安全与邮件分析中，SOP 是指将一线分析师高频、套路化的研判工作固化为<strong>“一键排查剧本 / 预置分析模板”</strong>。
+                        </p>
+                        <p style="margin-bottom:8px;">
+                            <strong>· 典型场景剧本：</strong><br>
+                            1. <em>“财务/发票补贴钓鱼排查 SOP”</em>：组合过滤发件域不匹配 + 发票关键词 + 危险附件类型；<br>
+                            2. <em>“伪造发信域仿冒溯源 SOP”</em>：检索 <code>spf=fail</code> 异常邮件并聚合来源 IP 频次；<br>
+                            3. <em>“可疑双后缀附件排查 SOP”</em>：拉取并研判 <code>.xlsx.exe</code> 等高危变种样本。
+                        </p>
+                        <p style="margin-bottom:0;">
+                            <strong>· 具体怎么做：</strong><br>
+                            后台将“多维查询过滤规则”与“针对性大模型分析 Prompt”预置为一条自动化处理流水线。用户在界面/CLI 一键触发该 SOP，系统自动联动执行：<strong>【条件初筛 → 检索召回可疑列表 → 大模型批量并行研判 → 结构化输出综合排查处置报告】</strong>。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>SOP 支持显著降低安全分析门槛，实现一键自动化风险筛查</span>
+            <span>安恒信息 · 企业导师开题讲解</span>
+        </div>
+    </div>
+
+    <!-- Slide 7: 工程规范与质量要求 -->
+    <div class="slide" data-slide="7">
+        <div class="slide-header">
+            <div>
+                <div class="slide-tag">Engineering Standards</div>
+                <div class="slide-title">六、 工程规范与质量要求</div>
+                <div class="slide-subtitle">工程标准从第一天就执行，保障代码可复现与工业可用性</div>
+            </div>
+            <div class="header-meta">日常规范：Git Tag · 单元测试 · 错例台账</div>
+        </div>
+        <div class="slide-body">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">📋 核心工程规范要求</div>
+                    <ul>
+                        <li><strong>版本管理（Git）：</strong>各组自建 Git 仓库，提交信息清晰可读；每周里程碑按时打 Git Tag（如 <code>v0.1-w1</code>）；环境必须可复现，锁定依赖清单（<code>requirements.txt</code> / <code>uv.lock</code>）。</li>
+                        <li><strong>测试驱动与样本隔离：</strong>每一个解析规则配齐单元测试；测试样本 <code>fixture</code> 目录独立维护，严禁大样本塞进代码主分支；每次改动必须执行全量回归。</li>
+                        <li><strong>一键评测脚本：</strong>编写一键执行脚本，批量压测样本集，输出解析成功率、崩溃率与平均吞吐（条/秒）。</li>
+                        <li><strong>错例与异常归档：</strong>针对挂死或畸形样本建立台账（样本编号 + 报错根因 + 改进措施），作为后续攻坚输入。</li>
+                    </ul>
+                </div>
+                <div class="card highlight">
+                    <div class="card-title">🤖 AI 编程与大模型使用规范</div>
+                    <p>鼓励充分利用 AI 编程工具（如 Claude Code / Cursor / Trae 等）提升开发效率，但必须遵守纪律：</p>
+                    <ul>
+                        <li><strong>审查后合入：</strong>AI 生成的代码必须经组员人工审查、跑通本地测试后方可合入，提交时可注明“AI 辅助生成”；</li>
+                        <li><strong>模型选型不限：</strong>运行时调用的大模型类型不限，但业务运行链路必须具备容错保护；</li>
+                        <li><strong>严禁黑盒依赖：</strong>答辩时将针对核心解析与架构细节进行提问，学生必须理解自身系统的每一处核心实现。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>规范研发习惯，产出具备工业级水准的高质量可复现成果</span>
+            <span>安恒信息 · 企业导师开题讲解</span>
+        </div>
+    </div>
+
+    <!-- Slide 8: 系统验收标准设计 -->
+    <div class="slide" data-slide="8">
+        <div class="slide-header">
+            <div>
+                <div class="slide-tag">Acceptance Criteria</div>
+                <div class="slide-title">七、 系统验收标准设计</div>
+                <div class="slide-subtitle">多维度综合评估：吞吐稳定性 + 分析可解释性 + 工程交付</div>
+            </div>
+            <div class="header-meta">验收模式：公开集自测 + 导师闭门盲测</div>
+        </div>
+        <div class="slide-body">
+            <div class="grid-3">
+                <div class="card highlight">
+                    <div class="card-title">🚀 1. 系统吞吐与鲁棒性轨</div>
+                    <ul>
+                        <li><strong>10 万封公开样本压测：</strong>全量入库无卡死、无 OOM（内存溢出）；</li>
+                        <li><strong>企业盲测集冲击（核心）：</strong>企业导师将在答辩阶段提供一批闭门盲测样本（含超长头、混淆畸形），直接投递进系统端口，系统稳定解析不崩溃；</li>
+                        <li><strong>检索响应时间：</strong>ClickHouse 多条件组合查询保持秒级响应。</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">🧠 2. 智能分析与可解释性轨</div>
+                    <ul>
+                        <li><strong>分析可解释性：</strong>大模型恶意研判不仅给出正常/可疑标签，必须输出清晰的判定逻辑与证据特征（如域名仿冒证据）；</li>
+                        <li><strong>NL2Query 准确性：</strong>自然语言转化过滤条件准确，无语法错误；</li>
+                        <li><strong>调用健壮性：</strong>网络抖动或大模型响应超时时，自动重试并优雅降级，服务不宕机。</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">⭐ 3. 工程加分项</div>
+                    <ul>
+                        <li><strong>Docker 容器化封装（建议）：</strong>编写 <code>docker-compose.yml</code> 实现系统在新机器上一键拉起部署；</li>
+                        <li><strong>交互友好度：</strong>提供直观易用的交互式 CLI 工具或简洁轻量 Web 界面；</li>
+                        <li><strong>扩展性与错例台账：</strong>针对异构邮件系统的扩展性设计，错例分析归档详尽。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>系统好不好靠样本说话：任何单一模块不可用均影响整体结题评定</span>
+            <span>安恒信息 · 企业导师开题讲解</span>
+        </div>
+    </div>
+
+    <!-- Slide 9: 考核与评价机制 -->
+    <div class="slide" data-slide="9">
+        <div class="slide-header">
+            <div>
+                <div class="slide-tag">Evaluation Framework</div>
+                <div class="slide-title">八、 课程考核与评价维度（参考）</div>
+                <div class="slide-subtitle">注重全周期阶段性推进与真实工程实操质量，避免期末突击</div>
+            </div>
+            <div class="header-meta">参考比例：过程评价 60% + 结题验收 40%</div>
+        </div>
+        <div class="slide-body">
+            <div class="grid-2">
+                <div class="card highlight">
+                    <div class="card-title">📈 1. 过程阶段性考查重点（参考 60%）</div>
+                    <p>关注各小组在 5 周周期内的持续推进节奏与实操质量：</p>
+                    <ul>
+                        <li><strong>里程碑交付达成度：</strong>各周关键任务是否按时完成，Git Tag 代码与测试是否真实可跑；</li>
+                        <li><strong>工程质量与规范：</strong>依赖锁定、单元测试覆盖、错例归档台账的记录质量；</li>
+                        <li><strong>团队分工与协作：</strong>组内分工合理性、问题自主排查态度与例会沟通质量；</li>
+                        <li><strong>课程思政与学习态度：</strong>日常考勤与团队精神（由高校导师综合评定）。</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">🏆 2. 结题验收综合考查重点（参考 40%）</div>
+                    <p>期末进行统一现场演示与技术答辩考核：</p>
+                    <ul>
+                        <li><strong>盲测集现场实测表现：</strong>面对企业导师注入的未公开样本集，系统接收与解析的稳定性表现；</li>
+                        <li><strong>系统功能完整演示：</strong>数据检索响应速度、大模型研判与自然语言转换实测效果；</li>
+                        <li><strong>技术文档规范性：</strong>开题报告、架构设计方案书、验收与部署文档的详实度；</li>
+                        <li><strong>答辩表现：</strong>对系统技术选型、架构原理与代码实现细节的回答表现。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>考核以真实运行代码与数据表现为准，具体细则根据项目推进动态统筹</span>
+            <span>安恒信息 · 企业导师开题讲解</span>
+        </div>
+    </div>
+
+    <!-- Slide 10: 五周里程碑与推进计划 -->
+    <div class="slide" data-slide="10">
+        <div class="slide-header">
+            <div>
+                <div class="slide-tag">Timeline & Milestones</div>
+                <div class="slide-title">九、 五周推进里程碑与交付物规划</div>
+                <div class="slide-subtitle">先调研定契约，再动手写代码，周周有交付</div>
+            </div>
+            <div class="header-meta">周期：5 周实训排期</div>
+        </div>
+        <div class="slide-body">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">周次</th>
+                        <th style="width: 22%;">阶段主题</th>
+                        <th style="width: 38%;">核心关键任务</th>
+                        <th style="width: 28%;">里程碑交付物</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>第一周</strong></td>
+                        <td><span class="badge badge-blue">架构设计与环境搭建</span><br><em>(先调研，定契约)</em></td>
+                        <td>1. 建立 Git 仓库与分支规范；<br>2. 学习 RFC 5322 规范与邮件路由特征；<br>3. 确定技术架构，设计 ClickHouse 表结构与 API 契约；<br>4. 搭建本地开发环境，获取公开测试集。</td>
+                        <td>· Git 仓库初始化与依赖清单<br>· <strong>《技术方案设计书》</strong>(Schema/API契约)<br>· 测试样本 fixtures 目录规范</td>
+                    </tr>
+                    <tr>
+                        <td><strong>第二周</strong></td>
+                        <td><span class="badge badge-blue">解析引擎与存储流水线</span><br><em>(数据流，抗压性)</em></td>
+                        <td>1. 实现邮件接收与解析模块（25端口/8080端口）；<br>2. 提取基础元数据、正文、附件哈希及真实发件 IP；<br>3. 优化 ClickHouse 批量写入，执行 10 万封样本压测；<br>4. 补充核心逻辑单元测试。</td>
+                        <td>· 邮件解析与接收模块 (Tag <code>v0.1</code>)<br>· 解析核心单元测试用例<br>· <strong>10 万封样本导入性能与吞吐报告</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>第三周</strong></td>
+                        <td><span class="badge badge-blue">检索接口与大模型接入</span><br><em>(双协议，智能分析)</em></td>
+                        <td>1. 开发多条件检索与分页查询接口；<br>2. 接入大模型双协议适配层（OpenAI + Anthropic）；<br>3. 实现调用超时控制与网络自动重试机制；<br>4. 设计并调优恶意分析与 NL2Query 的 Prompt。</td>
+                        <td>· 数据检索 API 与接口文档<br>· 大模型双协议适配模块 (Tag <code>v0.2</code>)<br>· AI 研判 Prompt 规范与错例台账 v1</td>
+                    </tr>
+                    <tr>
+                        <td><strong>第四周</strong></td>
+                        <td><span class="badge badge-blue">系统集成与鲁棒性攻坚</span><br><em>(抗非标，完善容错)</em></td>
+                        <td>1. 完成交互层打通（CLI 工具或轻量 Web 界面）；<br>2. 联调自然语言查询与邮件详情 AI 研判链路；<br>3. 针对非标、长文本及畸形样本开展容错攻坚；<br>4. 验证系统超时降级表现。</td>
+                        <td>· <strong>系统全链路交互版本 (CLI/Web)</strong><br>· 异常样本攻坚与改进报告<br>· 全链路容错与稳定性测试记录</td>
+                    </tr>
+                    <tr>
+                        <td><strong>第五周</strong></td>
+                        <td><span class="badge badge-green">成果验收与结题答辩</span><br><em>(容器化，完成交付)</em></td>
+                        <td>1. 编写 <code>docker-compose.yml</code> 容器化配置（建议）；<br>2. 接受企业导师盲测样本集实测检验；<br>3. 整理技术方案文档与验收报告，制作答辩 PPT。</td>
+                        <td>· 项目部署包 (含 Compose，Tag <code>v1.0</code>)<br>· <strong>《项目验收与部署文档》</strong><br>· 结题答辩 PPT 与演示材料</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="slide-footer">
+            <span>阶段成果按周推进并记录，具体验收依据实际提交成果核验</span>
+            <span>安恒信息 · 企业导师开题讲解</span>
+        </div>
+    </div>
+
+    <!-- Slide 11: 结语与本周启动清单 -->
+    <div class="slide cover-slide" data-slide="11">
+        <div class="cover-org">🚀 第一周启动清单 (Kickoff Checklist)</div>
+        <h2 style="font-size: 32px; color: var(--primary); margin-bottom: 20px;">万事开头难，先把基础走扎实</h2>
+        <div class="card" style="max-width: 840px; text-align: left; width: 100%; margin-bottom: 28px;">
+            <ul style="font-size: 14px; line-height: 1.9;">
+                <li><strong>✅ 动作 1：建立 GitHub 仓库与分工协作：</strong>由组长牵头建立 GitHub 仓库，组内明确模块分工，初始化项目工程并锁定依赖清单。</li>
+                <li><strong>✅ 动作 2：熟悉架构选型与拉起组件环境：</strong>熟悉 ClickHouse 及其他可选中间件（如 Kafka / Redis）的架构建议，使用 Docker 跑通本地环境。</li>
+                <li><strong>✅ 动作 3：研读 RFC 邮件协议与样本分析：</strong>用文本工具打开真实的 <code>.eml</code> 邮件样本，亲手拆解 Header 路由链与 MIME 结构。</li>
+                <li><strong>✅ 动作 4：沟通并约定存储字段（核心重点）：</strong>组内充分沟通，<strong>明确约定需要提取和入库存储的核心字段</strong>、表结构及组件间接口契约，输出《技术方案书草案》。</li>
+                <li><strong>✅ 动作 5：极简日报由组长统一汇总：</strong>组员每日向组长同步极简进度与问题，由组长统一汇总整理，到时候一起集中提交。</li>
+            </ul>
+        </div>
+        <p style="font-size: 16px; color: #64748b; font-weight: 600;">预祝同学们在本次实践课题中斩获佳绩，做出具有工业级水准的优秀系统！</p>
+    </div>
+
+</div>
+
+<div class="nav-controls">
+    <button class="nav-btn" id="prevBtn" title="上一页 (← 或 PageUp)">‹</button>
+    <div class="page-counter"><span id="currentSlide">1</span> / <span id="totalSlides">11</span></div>
+    <button class="nav-btn" id="nextBtn" title="下一页 (→ 或 Space 或 PageDown)">›</button>
+    <button class="fs-toggle" id="fsBtn" title="全屏演示 (快捷键 F)">全屏 ⛶</button>
+    <span class="nav-hint">键盘 ← → 翻页</span>
+</div>
+
+<script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentIndex = 0;
+
+    const currentSlideEl = document.getElementById('currentSlide');
+    const totalSlidesEl = document.getElementById('totalSlides');
+    const progressBar = document.getElementById('progressBar');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const fsBtn = document.getElementById('fsBtn');
+
+    totalSlidesEl.textContent = totalSlides;
+
+    function goToSlide(index) {
+        if (index < 0 || index >= totalSlides) return;
+        slides[currentIndex].classList.remove('active');
+        currentIndex = index;
+        slides[currentIndex].classList.add('active');
+
+        currentSlideEl.textContent = currentIndex + 1;
+        progressBar.style.width = `${((currentIndex + 1) / totalSlides) * 100}%`;
+
+        prevBtn.style.opacity = currentIndex === 0 ? "0.4" : "1";
+        prevBtn.style.pointerEvents = currentIndex === 0 ? "none" : "auto";
+        nextBtn.style.opacity = currentIndex === totalSlides - 1 ? "0.4" : "1";
+        nextBtn.style.pointerEvents = currentIndex === totalSlides - 1 ? "none" : "auto";
+    }
+
+    function nextSlide() {
+        if (currentIndex < totalSlides - 1) {
+            goToSlide(currentIndex + 1);
+        }
+    }
+
+    function prevSlide() {
+        if (currentIndex > 0) {
+            goToSlide(currentIndex - 1);
+        }
+    }
+
+    nextBtn.addEventListener('click', nextSlide);
+    prevBtn.addEventListener('click', prevSlide);
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+            e.preventDefault();
+            nextSlide();
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            e.preventDefault();
+            prevSlide();
+        } else if (e.key === 'f' || e.key === 'F') {
+            toggleFullScreen();
+        }
+    });
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => console.log(err));
+            fsBtn.textContent = "退出全屏";
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+                fsBtn.textContent = "全屏 ⛶";
+            }
+        }
+    }
+    fsBtn.addEventListener('click', toggleFullScreen);
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+    window.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+    window.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        if (touchStartX - touchEndX > 50) {
+            nextSlide();
+        } else if (touchEndX - touchStartX > 50) {
+            prevSlide();
+        }
+    });
+
+    goToSlide(0);
+</script>
+
+</body>
+</html>

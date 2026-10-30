@@ -1,0 +1,28 @@
+{
+  "sources": 16,
+  "seen_this_pass": 9512,
+  "inserted_this_pass": 3465,
+  "duplicates_this_pass": 6047,
+  "failed": 0,
+  "database_rows_by_source": {
+    "spamassassin-spam": 500,
+    "nazario-2015": 307,
+    "spamassassin-hard_ham": 250,
+    "spamassassin-easy_ham_2": 1400,
+    "enron": 100000,
+    "spamassassin-spam_2": 1396,
+    "spamassassin-easy_ham": 2500,
+    "nazario-2022": 246,
+    "nazario-2023": 419,
+    "nazario-2021": 101,
+    "nazario-2020": 158,
+    "http_raw": 2,
+    "synthetic": 1,
+    "nazario-2024": 403,
+    "nazario-2025": 481,
+    "nazario-2018": 288,
+    "nazario-2019": 243,
+    "nazario-2017": 325,
+    "nazario-2016": 494
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-21T03:26:46.008205+00:00",
+  "browser": "Playwright Chromium headless",
+  "source_system_id": "json-smoke-5bfa115e75ac",
+  "checks": {
+    "search_rows": 3,
+    "detail": true,
+    "analysis_persisted_partial_unknown": true,
+    "unconfigured_nl_visible_503": true,
+    "mobile_no_page_overflow": true,
+    "token_not_persisted_and_clear": true,
+    "javascript_errors": []
+  },
+  "external_model_calls": 0
+}

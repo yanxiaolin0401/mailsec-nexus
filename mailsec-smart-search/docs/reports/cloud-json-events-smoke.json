@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-30T08:19:14.187629+00:00",
+  "kind": "synthetic_http_json_real_clickhouse",
+  "source_system_id": "json-smoke-8d5570d6d38b",
+  "event_ids": [
+    "24ec2bb440beea5af00349c16ae922b06dabc888d5c6e94778d9c31ec6e5fe0b",
+    "3c592c82e2ebcf70ec37342970f8ea53c2239750cad4309e97ade64c85093ae6",
+    "565e89e24e4eb6a9b2117bf39eea6d71119272840327a57acff8583977a890db"
+  ],
+  "checks": {
+    "unauthorized": 401,
+    "nested_data_flat": [
+      202,
+      202,
+      202
+    ],
+    "idempotency": true,
+    "conflict": 409,
+    "worker_jobs": [
+      "done",
+      "done",
+      "done"
+    ],
+    "combined_filter_total": 3,
+    "pagination": true,
+    "structured_stats": {
+      "total": 3
+    },
+    "utc_output": true,
+    "detail_cleaning_privacy": true,
+    "homepage": 200
+  },
+  "external_model_calls": 0,
+  "not_a_capacity_benchmark": true
+}

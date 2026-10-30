@@ -1,0 +1,19 @@
+{
+  "sourceSystemId": "synthetic-tenant",
+  "sourceEventId": "synthetic-event-001",
+  "eventTime": "2026-10-14T09:00:00+08:00",
+  "mail": {
+    "from": "Security Team <sender@example.org>",
+    "senderaccount": "Sender@Example.org",
+    "toaccount": "Primary <primary@example.net>",
+    "allReceiverAccount": "primary@example.net, secondary@example.net",
+    "subject": "=?utf-8?B?5a6J5YWo6YCa55+l?=",
+    "ip": "8.8.8.8",
+    "clientip": "10.0.0.1",
+    "textContent": "<style>hidden</style><script>bad()</script><p>Please review <a href=\"https://example.org/verify\">this link</a>.</p>",
+    "mailHeaderList": ["Received: from relay.example.org ([8.8.8.8])", "Received: from internal.example.net ([10.0.0.1])", "To: primary@example.net", "Cc: secondary@example.net", "Date: Wed, 14 Oct 2026 09:00:00 +0800"],
+    "urls": "[\"https://example.org/verify\"]",
+    "attachInfos": [{"filename": "memo.pdf", "md5": "e10adc3949ba59abbe56e057f20f883e"}]
+  },
+  "unknownExtension": {"shouldNotBeSearchable": "hidden"}
+}

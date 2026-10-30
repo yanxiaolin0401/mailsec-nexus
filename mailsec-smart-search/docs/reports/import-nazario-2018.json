@@ -1,0 +1,11 @@
+{
+  "root": "/home/ubuntu/projects/mailsec-nexus/mailsec-smart-search/data/raw/nazario-2018",
+  "source": "nazario-2018",
+  "seen": 288,
+  "inserted": 288,
+  "duplicates": 0,
+  "failed": 0,
+  "seconds": 2.119,
+  "rss_mb": 42.6,
+  "errors": []
+}

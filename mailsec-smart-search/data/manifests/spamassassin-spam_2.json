@@ -1,0 +1,17 @@
+{
+  "name": "spamassassin-spam_2",
+  "url": "https://spamassassin.apache.org/old/publiccorpus/20050311_spam_2.tar.bz2",
+  "archive_sha256": "44280a0e28bf7645b2279e8e42659271ad82c6f40bf8d364dbda7f1df344a765",
+  "archive_bytes": 2059029,
+  "sha256_provenance": "locally computed; no publisher checksum supplied",
+  "verified": true,
+  "verified_at_utc": "2026-10-20T05:53:28Z",
+  "raw_path": "raw/spamassassin-spam_2",
+  "index": "spamassassin-spam_2.files.jsonl",
+  "files": 1397,
+  "messages": 1396,
+  "uncompressed_bytes": 8941177,
+  "source_page": "https://spamassassin.apache.org/old/publiccorpus/readme.html",
+  "license": "Message copyright remains with original senders; not Apache software license",
+  "limitations": "Historical spam/ham labels, not malware labels; some headers anonymized. Never replay to live mail servers; current DNS/blacklist lookups unsuitable for historical gold evaluation."
+}

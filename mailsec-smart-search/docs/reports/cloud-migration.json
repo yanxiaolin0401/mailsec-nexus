@@ -1,0 +1,91 @@
+{
+  "at": "2026-10-30T08:42:14.814785+00:00",
+  "mode": "apply",
+  "status": "verified",
+  "tables": {
+    "mail_records": {
+      "source": {
+        "rows": 109516,
+        "unique_ids": 109516,
+        "xor64": 1627858449266530780,
+        "sum128": 1011956513323285552822802
+      },
+      "target_before": {
+        "rows": 0,
+        "unique_ids": 0,
+        "xor64": 0,
+        "sum128": 0
+      },
+      "target_after": {
+        "rows": 109516,
+        "unique_ids": 109516,
+        "xor64": 1627858449266530780,
+        "sum128": 1011956513323285552822802
+      },
+      "inserted": 109516,
+      "skipped_identical": 0,
+      "verified_rows": 109516,
+      "full_column_sha256": "7bac2dc120f8e619955e51c2ada5e9e9dd922d7619aff2edb7dce2d2c786b2ee",
+      "source_unchanged": true
+    },
+    "mail_events": {
+      "source": {
+        "rows": 10,
+        "unique_ids": 10,
+        "xor64": 14136364525763321007,
+        "sum128": 105397263404065187455
+      },
+      "target_before": {
+        "rows": 3,
+        "unique_ids": 3,
+        "xor64": 16115265539492988274,
+        "sum128": 31705645076684616388
+      },
+      "target_after": {
+        "rows": 13,
+        "unique_ids": 13,
+        "xor64": 1984565725588396509,
+        "sum128": 137102908480749803843
+      },
+      "inserted": 10,
+      "skipped_identical": 0,
+      "verified_rows": 10,
+      "full_column_sha256": "6c10e5f7221d59f9697e70b9a5c9d582bf0fba815d773633274d31ff97de4d1c",
+      "source_unchanged": true
+    },
+    "analysis_events": {
+      "source": {
+        "rows": 8,
+        "unique_ids": 8,
+        "xor64": 1522837654710280239,
+        "sum128": 101758360290917931169
+      },
+      "target_before": {
+        "rows": 0,
+        "unique_ids": 0,
+        "xor64": 0,
+        "sum128": 0
+      },
+      "target_after": {
+        "rows": 8,
+        "unique_ids": 8,
+        "xor64": 1522837654710280239,
+        "sum128": 101758360290917931169
+      },
+      "inserted": 8,
+      "skipped_identical": 0,
+      "verified_rows": 8,
+      "full_column_sha256": "110b5cd1a8e15f5fb5d458316e828cf4e84a436b9d5e655fb8960507560d4fc6",
+      "source_unchanged": true
+    }
+  },
+  "source_preserved": true,
+  "raw_eml_uploaded": false,
+  "external_model_calls": 0,
+  "progress": {
+    "table": "analysis_events",
+    "verified": 8,
+    "inserted": 8,
+    "skipped": 0
+  }
+}

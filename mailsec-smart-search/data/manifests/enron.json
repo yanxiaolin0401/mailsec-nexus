@@ -1,0 +1,18 @@
+{
+  "name": "enron",
+  "url": "https://www.cs.cmu.edu/~enron/enron_mail_20150507.tar.gz",
+  "archive_sha256": "b3da1b3fe0369ec3140bb4fbce94702c33b7da810ec15d718b3fadf5cd748ca7",
+  "archive_bytes": 443254787,
+  "sha256_provenance": "locally computed; no publisher checksum supplied",
+  "verified": true,
+  "verified_at_utc": "2026-10-20T06:06:41Z",
+  "raw_path": "raw/enron",
+  "index": "enron.files.jsonl",
+  "files": 517401,
+  "messages": 517401,
+  "uncompressed_bytes": 1421183736,
+  "version": "2015-05-07",
+  "license": "Research resource; no general open license stated on CMU page; respect personal privacy",
+  "source_page": "https://www.cs.cmu.edu/~enron/",
+  "limitations": "No malware/spam gold labels; not automatically ham. Attachments removed; addresses modified; not original transport/authentication evidence."
+}

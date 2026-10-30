@@ -1,0 +1,10 @@
+<clickhouse>
+  <!-- Conservative development settings, not a production capacity claim. -->
+  <max_server_memory_usage>1610612736</max_server_memory_usage>
+  <mark_cache_size>67108864</mark_cache_size>
+  <uncompressed_cache_size>16777216</uncompressed_cache_size>
+  <background_schedule_pool_size>8</background_schedule_pool_size>
+  <background_message_broker_schedule_pool_size>2</background_message_broker_schedule_pool_size>
+  <background_distributed_schedule_pool_size>2</background_distributed_schedule_pool_size>
+  <logger><level>warning</level><size>20M</size><count>2</count></logger>
+</clickhouse>

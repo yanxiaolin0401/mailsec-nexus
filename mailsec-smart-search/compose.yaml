@@ -1,0 +1,97 @@
+name: mailsec-smart-search
+
+x-app: &app
+  build: .
+  environment: &env
+    MAILSEC_DATA_DIR: /data
+    MAILSEC_DATASETS_DIR: /datasets
+    CLICKHOUSE_HOST: clickhouse
+    CLICKHOUSE_USER: mailsec
+    CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Set CLICKHOUSE_PASSWORD in .env}
+    CLICKHOUSE_DB: mailsec
+    MAILSEC_API_TOKEN: ${MAILSEC_API_TOKEN:?Set MAILSEC_API_TOKEN in .env}
+    RSPAMD_URL: http://rspamd:11333
+    CLAMD_HOST: clamav
+    MAILSEC_LLM_PROVIDER: ${MAILSEC_LLM_PROVIDER:-}
+    MAILSEC_LLM_BASE_URL: ${MAILSEC_LLM_BASE_URL:-}
+    MAILSEC_LLM_MODEL: ${MAILSEC_LLM_MODEL:-}
+    MAILSEC_LLM_API_KEY: ${MAILSEC_LLM_API_KEY:-}
+    MAILSEC_LLM_EXTERNAL_AUTHORIZED: ${MAILSEC_LLM_EXTERNAL_AUTHORIZED:-false}
+    MAILSEC_LLM_TIMEOUT: ${MAILSEC_LLM_TIMEOUT:-15}
+    MAILSEC_MAX_LLM_CALLS_PER_RUN: ${MAILSEC_MAX_LLM_CALLS_PER_RUN:-10}
+  volumes:
+    - app_data:/data
+    - ./data:/datasets:ro
+  networks: [default, scanning]
+  depends_on:
+    clickhouse:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.8.25.14
+    environment:
+      CLICKHOUSE_USER: mailsec
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Set CLICKHOUSE_PASSWORD in .env}
+      CLICKHOUSE_DB: mailsec
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "127.0.0.1:8123:8123"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./deploy/clickhouse/low-memory.xml:/etc/clickhouse-server/config.d/low-memory.xml:ro
+    ulimits:
+      nofile: {soft: 262144, hard: 262144}
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user mailsec --password \"$$CLICKHOUSE_PASSWORD\" --query 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  api:
+    <<: *app
+    command: ["mailsec", "serve", "--host", "0.0.0.0", "--port", "8080"]
+    ports:
+      - "127.0.0.1:8080:8080"
+  worker:
+    <<: *app
+    command: ["mailsec", "worker", "--loop"]
+  rspamd:
+    image: rspamd/rspamd:4.2.2
+    profiles: ["detectors"]
+    volumes:
+      - ./deploy/rspamd/local.d:/etc/rspamd/local.d:ro
+    networks: [scanning]
+    # Local host testing only; never publish scanner/controller ports externally.
+    ports:
+      - "127.0.0.1:11333:11333"
+    restart: unless-stopped
+  clamav:
+    image: clamav/clamav:1.5.4
+    profiles: ["malware"]
+    environment:
+      CLAMD_CONF_AlertExceedsMax: "yes"
+      CLAMD_CONF_AlertEncrypted: "yes"
+      CLAMD_CONF_MaxScanTime: "5000"
+      CLAMD_CONF_MaxScanSize: "50M"
+      CLAMD_CONF_MaxFileSize: "25M"
+      CLAMD_CONF_StreamMaxLength: "20M"
+      CLAMD_CONF_MaxFiles: "1000"
+      CLAMD_CONF_MaxThreads: "2"
+      CLAMD_CONF_MaxQueue: "10"
+      CLAMD_CONF_ConcurrentDatabaseReload: "no"
+    volumes:
+      - clamav_data:/var/lib/clamav
+    ports:
+      - "127.0.0.1:3310:3310"
+    restart: unless-stopped
+
+volumes:
+  clickhouse_data:
+  app_data:
+  clamav_data:
+
+networks:
+  scanning:
+    internal: true

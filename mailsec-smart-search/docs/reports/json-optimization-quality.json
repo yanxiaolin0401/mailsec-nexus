@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-21T03:27:43.913970+00:00",
+  "tests": {
+    "command": ".venv/bin/python -m pytest -q",
+    "passed": 140,
+    "warnings": [
+      "existing Starlette/httpx TestClient deprecation"
+    ]
+  },
+  "lint": {
+    "tool": "Ruff (temporary QA installation)",
+    "command": "ruff check --isolated --select E4,E7,E9,F src tests scripts/smoke_events.py scripts/smoke_web.py",
+    "status": "pass",
+    "note": "Not a claim that all inherited stylistic lint rules pass."
+  },
+  "typecheck": {
+    "command": "mypy --follow-imports=silent --ignore-missing-imports src/mailsec_smart_search/{event_api,event_storage,event_spool,events,event_analysis,api,cli}.py",
+    "changed_modules_status": "pass",
+    "full_repository_status": "11 pre-existing errors in parser.py, llm.py, analysis.py; not fixed in this scope"
+  },
+  "other_checks": {
+    "pip_check": "pass",
+    "compileall_src_scripts_tests": "pass",
+    "node_check_console_js": "pass",
+    "runtime_dependencies_added": false
+  },
+  "security_scan": {
+    "tool": "Bandit",
+    "high": 0,
+    "medium_sql_heuristic_findings": 10,
+    "low_legacy_assert_findings": 1,
+    "triage": "B608 reviewed: SQL identifiers validated, templates allowlisted, values separately bound; real ClickHouse injection/filter tests and code review passed. Legacy B101 retained."
+  },
+  "real_clickhouse_boundary": {
+    "temporary_database_removed": true,
+    "long_subject_tail_search": "pass",
+    "recipient_beyond_summary_window_search": "pass",
+    "subject_summary_chars": 512,
+    "recipient_summary_count": 20,
+    "actual_receiver_count": 40,
+    "utc_output": "pass"
+  },
+  "review": "Independent code review APPROVE after fixes and real database evidence",
+  "scope_limits": [
+    "Not a 100k JSON benchmark",
+    "No authorized live provider credentials available",
+    "Not production multi-tenant isolation or backup/HA acceptance"
+  ]
+}

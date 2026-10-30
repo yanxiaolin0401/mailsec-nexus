@@ -1,0 +1,17 @@
+{
+  "name": "spamassassin-easy_ham",
+  "url": "https://spamassassin.apache.org/old/publiccorpus/20030228_easy_ham.tar.bz2",
+  "archive_sha256": "2b7b65904bcfcc31d2b5f51946f2d261370b257402cbbd62930b46ab83367438",
+  "archive_bytes": 1612216,
+  "sha256_provenance": "locally computed; no publisher checksum supplied",
+  "verified": true,
+  "verified_at_utc": "2026-10-20T05:53:19Z",
+  "raw_path": "raw/spamassassin-easy_ham",
+  "index": "spamassassin-easy_ham.files.jsonl",
+  "files": 2501,
+  "messages": 2500,
+  "uncompressed_bytes": 8806352,
+  "source_page": "https://spamassassin.apache.org/old/publiccorpus/readme.html",
+  "license": "Message copyright remains with original senders; not Apache software license",
+  "limitations": "Historical spam/ham labels, not malware labels; some headers anonymized. Never replay to live mail servers; current DNS/blacklist lookups unsuitable for historical gold evaluation."
+}

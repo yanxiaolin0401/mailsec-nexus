@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "checks": [
+    "real_api_admin_login",
+    "admin_edits_name_and_resets_password",
+    "user_new_password_login_and_no_admin_navigation",
+    "unconfigured_search_shows_real_failure",
+    "unimplemented_module_is_explicit",
+    "mobile_375_no_horizontal_overflow",
+    "logout_and_mobile_login"
+  ],
+  "page_errors": [],
+  "backend": "real FastAPI with disposable SQLite; search intentionally disabled",
+  "screenshots": [
+    "login-desktop.png",
+    "overview-desktop.png",
+    "users-desktop.png",
+    "module-mobile.png",
+    "login-mobile.png"
+  ]
+}

@@ -1,0 +1,12 @@
+.venv
+.env
+.env.cloud
+data
+var
+tests
+docs
+__pycache__
+*.egg-info
+.git
+.omx
+.pytest_cache

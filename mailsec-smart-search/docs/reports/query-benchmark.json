@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "started_at_utc": "2026-10-20T06:43:13.737076+00:00",
+  "dataset_rows": 109515,
+  "iterations": 30,
+  "warmups": 2,
+  "concurrency_levels": [
+    1,
+    4
+  ],
+  "filter_fingerprints": {
+    "sender_domain": "d2b3c6a79f1ca00a",
+    "subject_term": "0fd924362117d036",
+    "body_term": "e0603c499aae47eb",
+    "attachment_suffix": "c35b21d6ca39aa7c",
+    "from_time": "fbc64c08b8ed27c3",
+    "to_time": "31ef98edcb6680bf"
+  },
+  "machine": {
+    "os": "Linux",
+    "os_release": "6.8.0-124-generic",
+    "architecture": "x86_64",
+    "cpu_count": 2,
+    "python": "3.12.3",
+    "clickhouse_connect": "1.10.0",
+    "clickhouse": "26.8.25.14"
+  },
+  "results": [
+    {
+      "scenario": "recent",
+      "concurrency": 1,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 94.118,
+      "p95_ms": 139.065,
+      "max_ms": 160.506
+    },
+    {
+      "scenario": "recent",
+      "concurrency": 4,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 310.574,
+      "p95_ms": 428.741,
+      "max_ms": 448.08
+    },
+    {
+      "scenario": "sender_domain",
+      "concurrency": 1,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 110.945,
+      "p95_ms": 177.319,
+      "max_ms": 202.699
+    },
+    {
+      "scenario": "sender_domain",
+      "concurrency": 4,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 400.64,
+      "p95_ms": 502.975,
+      "max_ms": 536.336
+    },
+    {
+      "scenario": "time_subject",
+      "concurrency": 1,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 152.964,
+      "p95_ms": 227.151,
+      "max_ms": 269.524
+    },
+    {
+      "scenario": "time_subject",
+      "concurrency": 4,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 550.651,
+      "p95_ms": 816.16,
+      "max_ms": 892.921
+    },
+    {
+      "scenario": "body",
+      "concurrency": 1,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 888.956,
+      "p95_ms": 1152.012,
+      "max_ms": 1158.847
+    },
+    {
+      "scenario": "body",
+      "concurrency": 4,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 3575.866,
+      "p95_ms": 3985.01,
+      "max_ms": 4119.782
+    },
+    {
+      "scenario": "attachment",
+      "concurrency": 1,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 230.102,
+      "p95_ms": 368.207,
+      "max_ms": 415.956
+    },
+    {
+      "scenario": "attachment",
+      "concurrency": 4,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 705.181,
+      "p95_ms": 955.088,
+      "max_ms": 967.649
+    },
+    {
+      "scenario": "statistics",
+      "concurrency": 1,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 74.397,
+      "p95_ms": 120.529,
+      "max_ms": 138.012
+    },
+    {
+      "scenario": "statistics",
+      "concurrency": 4,
+      "runs": 30,
+      "warmups": 2,
+      "warmup_errors": 0,
+      "errors": 0,
+      "error_types": [],
+      "p50_ms": 260.476,
+      "p95_ms": 493.984,
+      "max_ms": 562.666
+    }
+  ]
+}

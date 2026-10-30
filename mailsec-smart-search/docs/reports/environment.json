@@ -1,0 +1,73 @@
+{
+  "captured_at": "2026-10-20T06:18:08.276827+00:00",
+  "platform": "Linux-6.8.0-124-generic-x86_64-with-glibc2.39",
+  "cpus": 2,
+  "python": "3.12.3",
+  "source_hashes": {
+    "importer.py": "281c5b2eb5417fe6c5dec10e6cfa002b2f8ee270e4cf97ec4789bce8670dc783",
+    "parser.py": "ba6ce40296c6f0e9d1ee9409fbfddb11db48b1abd2ab7d219d3602ca42261239",
+    "sop.py": "6441a349eeac84d60324506e2ebbaf1cfd85cc14ff5becf9d72d73fc627f9a4c",
+    "analysis.py": "34af067189fbebe99d4b6a0167ecc6b39b362ab844693cff3d8db01f4b5dce87",
+    "cli.py": "04a7bed9706e2e9ea350e91b601104464f7b1e6f82009a158f3d9d695211f04d",
+    "redaction.py": "14dfe1f54db86f3f7c848ab6147d04734aa8130c5a973a0fcf71f0df9a7bb954",
+    "detection.py": "5b4ae2db573d2c4400760fc8fa94c1df32886c78271be29c30c82a48c6e0a1d7",
+    "schema.sql": "3985b869ce39f175d059f6d0ed79543943df35db135750eafcadad9e4d12a65a",
+    "llm.py": "7cdccb74f2d62568a5a786bcdb8749c57290af327631a5b5ff6f85e944572957",
+    "domain.py": "a9a7fe15374f84360e61f51102df2e80ba87baceda61a219084eb1670ff3f2b5",
+    "api.py": "8d20f90e8ba4c602db60a4eb35ef9d9bb423ad7d32eddc62d03ee02d0d21bffd",
+    "evidence.py": "4fc4ffa28e4ca1b57dad75d764c734aff3d62e49197bd413e8961eb033f6cb78",
+    "spool.py": "1fa18742fd9b61f90ccd29b86d0ad2634b57b494fbe9ec3818c551f1d4927577",
+    "__init__.py": "40dc925aa18c70146c613c08a9a4a6926ef7f050227410ec368e54838b89646d",
+    "config.py": "d5983dd9abd0977ccbee1cbef24ad7584a653de8ca4562be45d7d666e1fa0e35",
+    "storage.py": "310625e755ebe745cd05a48e395e3a5936f15a91479fab4f19cacd5ed4209f7c"
+  },
+  "scanner_config_hashes": {
+    "deploy/rspamd/local.d/antivirus.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/arc.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/asn.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/aws_s3.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/bayes_expiry.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/bimi.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/classifier-bayes.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/clickhouse.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/dkim.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/dkim_signing.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/dmarc.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/elastic.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/external_services.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/fuzzy_check.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/gpt.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/greylist.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/history_redis.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/http_headers.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/known_senders.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/metadata_exporter.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/mx_check.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/neural.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/oletools.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/ratelimit.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/rbl.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/replies.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/reputation.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/spf.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/url_redirector.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2",
+    "deploy/rspamd/local.d/whitelist.conf": "af3212988dde00f93e7f8a8ba2ead819cb5a8aa687513cae529202395f723cc2"
+  },
+  "images": {
+    "clickhouse/clickhouse-server:26.8.25.14": [
+      "clickhouse/clickhouse-server@sha256:dd81097e2c38827a438287d8ae5d4dc8afafbdd0e61e83376fdd7ed4580673b9"
+    ],
+    "rspamd/rspamd:4.2.2": [
+      "rspamd/rspamd@sha256:33526f94cfbb5ab5485805ad9d6eddb6a52aca6529aad0ce99b67b01c2e756de"
+    ],
+    "clamav/clamav:1.5.4": [
+      "clamav/clamav@sha256:e19130cdebaeacc71fa46eab3ed6f69941f2f22aa5e08d55e9197f8edf43ce5e"
+    ]
+  },
+  "clamav_database_version": "ClamAV 1.5.4/28157/Sun Oct 18 06:24:14 2026",
+  "dependency_lock_sha256": "31bb6e145be8b76131a9d412834b98156382979a72c51b6a2f108b81ce9a03e7",
+  "compose_sha256": "f42ee43d940b1eba489547c2b75af9528061bba267f11db74106d35e657dbc14",
+  "verified_at": "2026-10-20T06:46:32.299097+00:00",
+  "container_sources_match_local": true,
+  "app_image_id": "sha256:482982545dc19edf0c892b52bd04e741839826688e514f44219a78efeb4450a0"
+}

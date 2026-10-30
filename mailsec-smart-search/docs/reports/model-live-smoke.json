@@ -1,0 +1,15 @@
+{
+  "synthetic_only": true,
+  "checked_at": "2026-10-20T06:15:12.340524+00:00",
+  "result": {
+    "provider": "unconfigured",
+    "status": "unavailable",
+    "risk": null,
+    "reason": "",
+    "error": "external transfer not authorized; review data policy before enabling",
+    "model_id": "",
+    "redaction_version": "2",
+    "input_sha256": "de74e2e07176d56b1853c9dcc39406859e40949d4963aeb264ec05d2128906a6",
+    "evidence_refs": []
+  }
+}

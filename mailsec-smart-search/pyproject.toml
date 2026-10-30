@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mailsec-smart-search"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.140,<1",
+    "uvicorn>=0.30,<1",
+    "clickhouse-connect==1.10.0",
+    "httpx>=0.27,<1",
+    "python-multipart>=0.0.9,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10"]
+
+[project.scripts]
+mailsec = "mailsec_smart_search.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mailsec_smart_search = ["schema.sql", "event_schema.sql", "static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["data", "var", ".venv", "build", "dist"]
