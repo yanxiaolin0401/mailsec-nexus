@@ -1,4 +1,6 @@
+import json
 from types import SimpleNamespace
+from uuid import uuid4
 
 import pytest
 
@@ -11,8 +13,12 @@ def settings(tmp_path, *, max_message_bytes=1000, max_spool_bytes=1000):
                            max_spool_bytes=max_spool_bytes)
 
 
-def normalize(payload, ingress_ip='unknown', now=None):
-    return {'event_id': 'evt-1', 'source_system_id': payload.get('sourceSystemId', '-'),
+def normalize(payload, ingress_ip='unknown', now=None, canonical=False):
+    default_id = ('evt-1' if payload.get('sourceEventId') == 'source-1'
+                  else f"evt-{payload['sourceEventId']}" if payload.get('sourceEventId')
+                  else uuid4().hex)
+    return {'event_id': payload.get('eventId', default_id),
+            'source_system_id': payload.get('sourceSystemId', '-'),
             'source_event_id': payload.get('sourceEventId', '-'),
             'trace_id': 'trc-1', 'event_time': '2026-10-14T01:00:00+00:00',
             'ingested_at': '2026-10-14T01:00:00+00:00', 'subject': payload.get('subject', '-')}
@@ -142,3 +148,140 @@ def test_disk_pressure_rejects_new_events_but_preserves_existing_receipts(tmp_pa
     with pytest.raises(SpoolFullError):
         spool.enqueue({'sourceSystemId': 'tenant', 'sourceEventId': 'two'})
     assert spool.get_job(receipt['jobId'])['status'] == 'pending'
+
+
+def test_batch_rejects_invalid_size_and_rolls_back_late_validation(tmp_path, monkeypatch):
+    monkeypatch.setattr('mailsec_smart_search.event_spool.normalize_event', normalize)
+    spool = EventSpool(settings(tmp_path, max_spool_bytes=10000))
+    with pytest.raises(ValueError):
+        spool.enqueue_many([])
+    with pytest.raises(ValueError):
+        spool.enqueue_many([{}] * 1001)
+    with pytest.raises(ValueError):
+        spool.enqueue_many([{'sourceEventId': 'one'}, None])
+    assert spool.status_counts()['pending'] == 0
+
+
+def test_batch_conflict_and_quota_failures_are_atomic(tmp_path, monkeypatch):
+    monkeypatch.setattr('mailsec_smart_search.event_spool.normalize_event', normalize)
+    spool = EventSpool(settings(tmp_path, max_spool_bytes=10000))
+    spool.enqueue({'sourceSystemId': 'tenant', 'sourceEventId': 'existing'})
+    with pytest.raises(ConflictError):
+        spool.enqueue_many([
+            {'sourceSystemId': 'tenant', 'sourceEventId': 'new'},
+            {'sourceSystemId': 'tenant', 'sourceEventId': 'existing', 'subject': 'changed'},
+        ])
+    assert spool.status_counts()['pending'] == 1
+    assert spool.list_jobs()['total'] == 1
+
+    tiny = EventSpool(settings(tmp_path / 'tiny', max_spool_bytes=300))
+    with pytest.raises(SpoolFullError):
+        tiny.enqueue_many([{'sourceEventId': 'one'}, {'sourceEventId': 'two'}])
+    assert tiny.status_counts()['pending'] == 0
+
+
+def test_batch_replay_and_global_event_id_uniqueness(tmp_path, monkeypatch):
+    monkeypatch.setattr('mailsec_smart_search.event_spool.normalize_event', normalize)
+    spool = EventSpool(settings(tmp_path, max_spool_bytes=10000))
+    one = {'sourceSystemId': 'tenant', 'sourceEventId': 'one', 'eventId': 'shared-id'}
+    receipts = spool.enqueue_many([one, one])
+    assert receipts[0] == receipts[1]
+    assert spool.enqueue_many([one]) == [receipts[0]]
+    with pytest.raises(ConflictError):
+        spool.enqueue_many([
+            {'sourceSystemId': 'tenant', 'sourceEventId': 'fresh', 'eventId': 'fresh-id'},
+            {'sourceSystemId': 'tenant', 'sourceEventId': 'other', 'eventId': 'shared-id'},
+        ])
+    assert spool.status_counts()['pending'] == 1
+    with spool._connect() as connection:
+        indexes = connection.execute("PRAGMA index_list('jobs')").fetchall()
+    assert 'jobs_event_id' in [row['name'] for row in indexes]
+
+
+def test_old_pair_receipt_survives_uuid_upgrade(tmp_path, monkeypatch):
+    monkeypatch.setattr('mailsec_smart_search.event_spool.normalize_event', normalize)
+    spool = EventSpool(settings(tmp_path, max_spool_bytes=10000))
+    payload = {'sourceSystemId': 'tenant', 'sourceEventId': 'one'}
+    receipt = spool.enqueue(payload)
+    with spool._connect() as connection:
+        connection.execute('UPDATE jobs SET event_id = ? WHERE job_id = ?',
+                           ('historical-digest-id', receipt['jobId']))
+    reopened = EventSpool(settings(tmp_path, max_spool_bytes=10000))
+    replay = reopened.enqueue(payload)
+    assert replay == {**receipt, 'eventId': 'historical-digest-id'}
+    assert reopened.status_counts()['pending'] == 1
+
+
+def test_summary_and_job_listing_exclude_private_data(tmp_path, monkeypatch):
+    monkeypatch.setattr('mailsec_smart_search.event_spool.normalize_event', normalize)
+    spool = EventSpool(settings(tmp_path, max_spool_bytes=10000))
+    spool.enqueue({'sourceEventId': 'one', 'subject': 'private body'})
+    spool.enqueue({'sourceEventId': 'two'})
+    summary = spool.summary()
+    assert summary['counts'] == {'pending': 2, 'retry': 0, 'done': 0}
+    assert 0 < summary['pending_bytes'] <= summary['queue_quota_bytes']
+    assert summary['disk_bytes'] > 0 and summary['oldest_pending_at']
+    page = spool.list_jobs(status='pending', limit=1, offset=1)
+    assert page['total'] == 2 and len(page['items']) == 1
+    assert not {'event_json', 'payload_hash', 'payload_bytes', 'raw_path'} & set(page['items'][0])
+    assert 'private body' not in str(page) and 'private body' not in str(summary)
+    with pytest.raises(ValueError):
+        spool.list_jobs(status='bogus')
+    with pytest.raises(ValueError):
+        spool.list_jobs(limit=201)
+
+
+def test_canonical_flag_is_forwarded_for_single_and_batch(tmp_path, monkeypatch):
+    seen = []
+
+    def recorder(payload, ingress_ip='unknown', now=None, canonical=False):
+        seen.append((canonical, ingress_ip))
+        return normalize(payload, ingress_ip=ingress_ip, now=now, canonical=canonical)
+
+    monkeypatch.setattr('mailsec_smart_search.event_spool.normalize_event', recorder)
+    spool = EventSpool(settings(tmp_path, max_spool_bytes=10000))
+    spool.enqueue({'sourceEventId': 'one'}, ingress_ip='127.0.0.1', canonical=True)
+    spool.enqueue_many([{'sourceEventId': 'two'}], ingress_ip='127.0.0.2', canonical=True)
+    spool.enqueue({'sourceEventId': 'three'})
+    assert seen == [(True, '127.0.0.1'), (True, '127.0.0.2'), (False, 'unknown')]
+
+
+def test_real_canonical_batch_preserves_uuid_and_rolls_back_invalid(tmp_path):
+    spool = EventSpool(settings(tmp_path, max_message_bytes=16000, max_spool_bytes=100000))
+    payload = {
+        'eventId': 'd0c41219-3950-4e1b-8f2c-e0a850a82d2f',
+        'sourceSystemId': 'MAIL_DEMO_EXCEL', 'sourceEventId': 'demo-row-1',
+        'eventTime': '2026-05-18T17:01:38Z', 'from': 'sender@example.org',
+        'to': ['recipient@example.org'], 'subject': 'demo',
+        'rawHeaders': 'From: sender@example.org\r\nTo: recipient@example.org',
+    }
+    receipts = spool.enqueue_many([payload, payload], canonical=True)
+    assert receipts[0] == receipts[1]
+    assert receipts[0]['eventId'] == payload['eventId']
+    assert spool.status_counts()['pending'] == 1
+    second = {**payload, 'eventId': '4ca92e6b-ba6f-4bd2-9bb9-e8186ccc0128',
+              'sourceEventId': 'demo-row-2'}
+    with pytest.raises(ValueError):
+        spool.enqueue_many([second, {**payload, 'sourceEventId': 'missing-recipient', 'to': []}],
+                           canonical=True)
+    assert spool.status_counts()['pending'] == 1
+
+
+def test_enqueue_batch_larger_than_worker_chunk_flushes_in_parts(tmp_path, monkeypatch):
+    monkeypatch.setattr('mailsec_smart_search.event_spool.normalize_event', normalize)
+    one = {'sourceEventId': 'one', 'subject': 'a'}
+    two = {'sourceEventId': 'two', 'subject': 'b'}
+    row_bytes = len(json.dumps(normalize(one), ensure_ascii=False,
+                               separators=(',', ':'), allow_nan=False).encode('utf-8'))
+    monkeypatch.setattr('mailsec_smart_search.event_spool._MAX_BATCH_BYTES', row_bytes + 1)
+    spool = EventSpool(settings(tmp_path, max_spool_bytes=10000))
+    receipts = spool.enqueue_many([one, two])
+    assert len(receipts) == 2 and spool.status_counts()['pending'] == 2
+    repository = Repository()
+    assert spool.flush(repository) == 1
+    assert spool.status_counts()['pending'] == 1
+    assert spool.flush(repository) == 1
+    assert spool.status_counts()['done'] == 2
+    with pytest.raises(MessageTooLargeError):
+        spool.enqueue({'sourceEventId': 'three', 'subject': 'x' * 20})
+    assert spool.status_counts()['done'] == 2

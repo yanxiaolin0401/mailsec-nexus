@@ -1,0 +1,13 @@
+{
+  "time": "2026-11-12T08:59:34.442417+00:00",
+  "checks": {
+    "role_protection_and_uds_integration": true,
+    "admin_storage_queue_jobs_ui": true,
+    "live_nl_preview_and_signed_execution": true,
+    "live_mail_detail_analysis_and_history": true,
+    "single_browser_origin_no_key_echo_mobile": true
+  },
+  "model_calls": 2,
+  "search_matches": 18,
+  "passed": true
+}

@@ -1,0 +1,62 @@
+{
+  "at": "2026-11-12T09:02:41.906846+00:00",
+  "principles": "smart-search owns backend; platform owns all user interfaces; current Cloud+platform has one TCP listener at 5173",
+  "alignment_before": {
+    "nl_preview_signed_execution": true,
+    "json_legacy_search": true,
+    "llm_config": true,
+    "mail_analysis": false,
+    "storage_queue_management": false
+  },
+  "alignment_after": {
+    "nl_preview_signed_execution": true,
+    "json_legacy_search": true,
+    "llm_config": true,
+    "mail_analysis_and_history": true,
+    "admin_storage_queue_jobs": true
+  },
+  "runtime": {
+    "web": "5173",
+    "platform_api": "private Unix socket",
+    "smart_search_api": "private Unix socket",
+    "host_8080_listening": false,
+    "host_8090_listening": false,
+    "module_http_paths": {
+      "/": 404,
+      "/assets/console.js": 404,
+      "/health/ready": 200
+    },
+    "web_origin": "http://43.133.251.134:5173"
+  },
+  "preserved_mail_counts": {
+    "mail_events": 992,
+    "mail_records": 109516
+  },
+  "validation": {
+    "module_pytest": 234,
+    "platform_api_and_preview_pytest": 32,
+    "web_tests": 12,
+    "web_typecheck": "passed",
+    "web_lint": "passed",
+    "web_build": "passed",
+    "module_fatal_static_checks": "passed",
+    "module_mypy_errors": 19,
+    "browser": "logs/verify_platform_unified.json",
+    "live_model_calls": 2,
+    "independent_review": "approved",
+    "module_repository_lint_reports": 137
+  },
+  "deleted_files": [
+    "src/mailsec_smart_search/static/index.html",
+    "src/mailsec_smart_search/static/console.js",
+    "src/mailsec_smart_search/static/console.css",
+    "scripts/smoke_web.py",
+    "scripts/smoke_cloud_search.py",
+    "tests/test_console_ui.py",
+    "tests/console_ui_test.cjs"
+  ],
+  "rollback_archive": "var/platform-consolidation/standalone-ui.tar.gz",
+  "historical_evidence": "retained and annotated; new progress appended",
+  "data_mutations": "no mail imports, deletions or account resets; authorized browser analysis added one analysis opinion; platform login/audit records appended",
+  "next": "Future module features must include platform BFF/frontend and shared-entry acceptance"
+}

@@ -33,9 +33,9 @@ def main() -> None:
         print("platform v1 schema ready")
         return
     username = os.getenv("BOOTSTRAP_ADMIN_USERNAME", "").strip().lower()
-    password = os.getenv("BOOTSTRAP_ADMIN_PASSWORD", "")
-    if not username or not 12 <= len(password) <= 256:
-        parser.error("BOOTSTRAP_ADMIN_USERNAME and BOOTSTRAP_ADMIN_PASSWORD (at least 12 chars) required")
+    password = os.getenv("BOOTSTRAP_ADMIN_PASSWORD")
+    if not username or password is None:
+        parser.error("BOOTSTRAP_ADMIN_USERNAME and BOOTSTRAP_ADMIN_PASSWORD must be set")
     with Session(engine) as db:
         if db.get(SchemaVersion, 1) is None:
             parser.error("run init-db first")

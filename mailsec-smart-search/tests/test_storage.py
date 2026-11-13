@@ -10,7 +10,7 @@ import unittest
 
 from mailsec_smart_search.config import Settings
 from mailsec_smart_search.domain import AttachmentInfo, MailRecord, SearchQuery
-from mailsec_smart_search.storage import ClickHouseRepository, _MAIL_COLUMNS
+from mailsec_smart_search.storage import ClickHouseRepository, _MAIL_COLUMNS, _decoded_sent_at
 
 
 class FakeClient:
@@ -23,7 +23,8 @@ class FakeClient:
     def command(self, sql):
         self.commands.append(sql)
 
-    def insert(self, table, rows, column_names):
+    def insert(self, table, rows, column_names, settings=None):
+        assert settings == {"async_insert": 0}
         self.inserts.append((table, rows, column_names))
 
     def query(self, sql, parameters, settings):
@@ -168,13 +169,24 @@ class StorageTests(unittest.TestCase):
         self.repo.search_summaries(SearchQuery())
         self.repo.search_candidates(SearchQuery())
         for sql, _, _ in self.client.queries:
-            self.assertIn("toUnixTimestamp64Milli(sent_at) >= -2208988800000", sql)
-            self.assertIn("toUnixTimestamp64Milli(sent_at) < 10413792000000", sql)
-            self.assertIn("sent_at, NULL) AS sent_at", sql)
+            self.assertIn("toUnixTimestamp64Milli(mail_records.sent_at) >= -2208988800000", sql)
+            self.assertIn("toUnixTimestamp64Milli(mail_records.sent_at) < 10413792000000", sql)
+            self.assertIn("toString(mail_records.sent_at), NULL) AS sent_at", sql)
         self.client.result = SimpleNamespace(column_names=["total"], result_rows=[(0,)])
         self.repo.stats(SearchQuery(from_time=datetime(2026, 1, 1, tzinfo=timezone.utc)))
         sql, _, _ = self.client.queries[-1]
-        self.assertIn("sent_at >= {from_time:DateTime64(3)}", sql)
+        self.assertIn("mail_records.sent_at >= {from_time:DateTime64(3)}", sql)
+
+    def test_safe_sent_at_string_decodes_to_utc_datetime(self):
+        value = _decoded_sent_at("2026-10-13 07:08:09.123")
+        self.assertEqual(value, datetime(2026, 10, 13, 7, 8, 9, 123000, tzinfo=timezone.utc))
+        self.assertIsNone(_decoded_sent_at(None))
+        columns = ["mail_id", "sender", "sender_domain", "subject", "sent_at", "ingested_at",
+                   "attachment_count", "parse_status", "body_preview"]
+        values = ["id", "", "", "", "2026-10-13 07:08:09.123",
+                  datetime(2026, 10, 13, tzinfo=timezone.utc), 0, "ok", ""]
+        self.client.result = SimpleNamespace(column_names=columns, result_rows=[values])
+        self.assertEqual(self.repo.search_summaries(SearchQuery())[0]["sent_at"], value)
 
     def test_stats_and_append_only_analysis(self):
         mail = sample_mail()

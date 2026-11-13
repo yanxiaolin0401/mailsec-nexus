@@ -14,7 +14,7 @@ NOW = datetime(2026, 10, 15, tzinfo=timezone.utc)
 def test_nested_documented_columns_and_cleaning():
     payload = json.loads(FIXTURE.read_text())
     row = normalize_event(payload, now=NOW, ingress_ip="192.0.2.2")
-    assert len(row) == 34  # documented 33 columns + searchable body extension
+    assert len(row) == 39  # existing 34 columns plus canonical-compatible fields
     assert len(row["event_id"]) == 64
     assert row["event_time"] == "2026-10-14T01:00:00+00:00"
     assert row["mail_date"] == row["event_time"]
@@ -26,6 +26,8 @@ def test_nested_documented_columns_and_cleaning():
     assert row["ingress_ip"] == "192.0.2.2"
     assert row["risk_verdict"] == "unknown"
     assert row["risk_level"] == "unknown"
+    assert (row["tenant_id"], row["mailbox"], row["cc_accounts"],
+            row["body_html"], row["security_meta_json"]) == ("tenant_default", "INBOX", [], "-", "{}")
     assert "hidden" not in row["text_content"] and "bad()" not in row["text_content"]
     assert row["external_urls"] == ["https://example.org/verify"]
     assert row["external_attachments"] == [{"filename": "memo.pdf", "md5": "e10adc3949ba59abbe56e057f20f883e"}]

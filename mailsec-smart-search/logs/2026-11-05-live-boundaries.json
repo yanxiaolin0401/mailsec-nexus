@@ -1,0 +1,28 @@
+{
+  "at": "2026-11-05T06:28:09.158348+00:00",
+  "live_invalid_batch_rollback": true,
+  "live_conflict_batch_rollback": true,
+  "fresh_rolled_back_event_absent": true,
+  "combined_identity_tenant_mailbox_recipient_or_query": true,
+  "cc_query_checked": true,
+  "http_400_415_401_correct": true,
+  "queue_counts": {
+    "pending": 0,
+    "retry": 0,
+    "done": 982
+  },
+  "tables": [
+    {
+      "name": "mail_records",
+      "logical_rows": 109516
+    },
+    {
+      "name": "mail_events",
+      "logical_rows": 992
+    },
+    {
+      "name": "analysis_events",
+      "logical_rows": 8
+    }
+  ]
+}

@@ -161,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     serve = sub.add_parser("serve", help="start local HTTP API")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8080)
+    serve.add_argument("--uds", help="Unix socket for internal API communication; disables TCP binding")
     worker = sub.add_parser("worker", help="parse pending HTTP submissions")
     worker.add_argument("--loop", action="store_true")
     worker.add_argument("--batch-size", type=int, default=100)
@@ -178,11 +179,13 @@ def main(argv: list[str] | None = None) -> int:
     query = sub.add_parser("query", help="authenticated JSON event query")
     query.add_argument("json", nargs="?", default="{}")
     query.add_argument("--url", default="http://127.0.0.1:8080")
+    query.add_argument("--socket", help="Internal Unix socket (no TCP connection)")
     query.add_argument("--legacy-eml", action="store_true", help="search legacy EML records")
     natural = sub.add_parser("ask", help="authorized natural-language search (preview by default)")
     natural.add_argument("text")
     natural.add_argument("--execute", action="store_true")
     natural.add_argument("--url", default="http://127.0.0.1:8080")
+    natural.add_argument("--socket", help="Internal Unix socket (no TCP connection)")
     natural.add_argument("--legacy-eml", action="store_true", help="query legacy EML records")
     args = parser.parse_args(argv)
     if args.command == "worker" and not 1 <= args.batch_size <= 500:
@@ -192,7 +195,8 @@ def main(argv: list[str] | None = None) -> int:
         import uvicorn
 
         logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
-        uvicorn.run("mailsec_smart_search.api:app", host=args.host, port=args.port,
+        binding: dict[str, Any] = {"uds": args.uds} if args.uds else {"host": args.host, "port": args.port}
+        uvicorn.run("mailsec_smart_search.api:app", **binding,
                     workers=1, limit_concurrency=64, timeout_keep_alive=5, access_log=False)
         return 0
     settings = Settings.from_env()
@@ -201,7 +205,8 @@ def main(argv: list[str] | None = None) -> int:
 
         payload = json.loads(args.json) if args.command == "query" else {"text": args.text, "execute": args.execute}
         endpoint = ("/v1/search" if args.command == "query" else "/v1/nl/query") if args.legacy_eml else ("/api/v1/mails" if args.command == "query" else "/api/v1/nl/query")
-        with httpx.Client(timeout=30, trust_env=False) as client:
+        transport = httpx.HTTPTransport(uds=args.socket) if args.socket else None
+        with httpx.Client(timeout=30, trust_env=False, transport=transport) as client:
             if args.command == "query" and not args.legacy_eml:
                 response = client.get(args.url.rstrip("/") + endpoint, params=payload,
                                       headers={"X-Mailsec-Token": settings.api_token})

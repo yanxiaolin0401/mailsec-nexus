@@ -2,6 +2,22 @@
 
 2026-10-22，已实现首期平台 BFF；隔离 ClickHouse 合成数据联调通过，结果见 `reports/integration-smoke.json`。HTTP 采用进程内 ASGI 桥接，不等于完整 Compose 网络链路验收。
 
+## 2026-10-30 Cloud 对接更新
+
+平台现已适配两条独立链路，不再只查询 JSON 事件：
+
+| 平台请求 | source=event（API 默认） | source=legacy（页面默认） |
+| --- | --- | --- |
+| `POST /api/platform/v1/mail/search` | `GET /api/v1/mails` | `POST /v1/search` |
+| `POST /api/platform/v1/mail/stats` | `GET /api/v1/stats` | `POST /v1/stats` |
+| `GET /api/platform/v1/mail/{id}?source=…` | `/api/v1/mails/{event_id}` | `/v1/mail/{mail_id}` |
+
+`subject` 映射为 `subject_contains`；legacy 的 `q` 仅映射为 `body_contains`，不能声称是跨字段关键词；sender/recipient 保持上游语义。legacy 风险过滤返回 422。每条路径复用服务端会话、专用实例租户绑定及操作审计。
+
+历史列表 `total=null`，使用上游 `may_have_more`；当前页条数不是总数，总数通过统计接口单独读取。事件列表按已知 total 翻页；历史空尾页仍可返回上一页；offset 上限 10000，需缩小筛选范围继续调查。发送时间为 null 时明确缺失，不拿入库时间填充。
+
+数据查询默认超时 30 秒，可用 `SMART_SEARCH_TIMEOUT_SECONDS` 调整；健康检查仍为 3 秒。上游错误通用化，不回传内部主机或凭据。Cloud 启动与只读验收见 [平台说明](../README.md#clickhouse-cloud-联调复用已运行的-smart-search)。
+
 ## 已有能力
 
 后端：`mailsec-smart-search/src/mailsec_smart_search/{api,event_api,event_storage}.py`。

@@ -18,14 +18,14 @@ _COLUMNS = (
     'data_quality_tags', 'sender_host', 'suspicious_string', 'malicious_sender_ip',
     'tenant_email_addr_url', 'external_urls', 'external_attachments', 'mail_headers',
     'mail_date', 'reply_to', 'src_email_address', 'to_email_address', 'raw_json',
-    'text_content',
+    'text_content', 'tenant_id', 'mailbox', 'cc_accounts', 'body_html', 'security_meta_json',
 )
 _TIME_COLUMNS = frozenset({'event_time', 'ingested_at', 'mail_date'})
 _SUMMARY_COLUMNS = (
     'event_id', 'event_time', 'ingested_at', 'source_system_id', 'source_event_id',
     'trace_id', 'sender_account', 'receiver_accounts', 'subject', 'sender_ip',
     'ingress_ip', 'sender_country', 'sender_isp', 'risk_verdict', 'risk_level',
-    'risk_score', 'feature_tags', 'data_quality_tags',
+    'risk_score', 'feature_tags', 'data_quality_tags', 'tenant_id', 'mailbox',
 )
 _DETAIL_COLUMNS = tuple(column for column in _COLUMNS if column != 'raw_json')
 _SUMMARY_SELECT = ', '.join(
@@ -38,9 +38,19 @@ _ALLOWED = frozenset({
     'subject_contains', 'body_contains', 'q', 'sender_ip', 'attachment_md5',
     'url', 'risk_level', 'risk_verdict', 'source_system_id', 'has_attachment',
     'attachment_suffix', 'attachment_name_contains', 'limit', 'offset',
+    'tenant_id', 'mailbox', 'event_id', 'source_event_id', 'subject_or_attachment_contains',
 })
 _IDENTIFIER = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 _MAX_OFFSET = 10_000
+_EXTENSION_DEFAULTS = {'tenant_id': 'tenant_default', 'mailbox': 'INBOX', 'cc_accounts': [],
+                       'body_html': '-', 'security_meta_json': '{}'}
+_EXTENSION_DDL = {
+    'tenant_id': "LowCardinality(String) DEFAULT 'tenant_default'",
+    'mailbox': "LowCardinality(String) DEFAULT 'INBOX'",
+    'cc_accounts': 'Array(String) DEFAULT []',
+    'body_html': "String DEFAULT '-'",
+    'security_meta_json': "String DEFAULT '{}'",
+}
 
 
 def _utc(value: datetime | str) -> datetime:
@@ -82,15 +92,20 @@ class EventRepository:
         for statement in schema.split(';'):
             if statement.strip():
                 self.client.command(statement.strip().replace('{database}', f'`{self.database}`'))
+        # Additive upgrade: old rows receive defaults, no destructive rebuild or replay.
+        for column, definition in _EXTENSION_DDL.items():
+            self.client.command(f'ALTER TABLE {self.table} ADD COLUMN IF NOT EXISTS {column} {definition}')
 
     def insert_batch(self, events: list[dict[str, Any]]) -> int:
         if not events:
             return 0
         rows = []
         for event in events:
+            event = {**_EXTENSION_DEFAULTS, **event}
             rows.append(tuple(_utc(event[column]) if column in _TIME_COLUMNS else event[column]
                               for column in _COLUMNS))
-        self.client.insert(f'{self.database}.mail_events', rows, column_names=list(_COLUMNS))
+        self.client.insert(f'{self.database}.mail_events', rows, column_names=list(_COLUMNS),
+                           settings={'async_insert': 0})
         return len(rows)
 
     @staticmethod
@@ -103,7 +118,8 @@ class EventRepository:
         direct = {
             'sender': 'sender_account', 'sender_ip': 'sender_ip',
             'risk_level': 'risk_level', 'risk_verdict': 'risk_verdict',
-            'source_system_id': 'source_system_id',
+            'source_system_id': 'source_system_id', 'source_event_id': 'source_event_id',
+            'event_id': 'event_id', 'tenant_id': 'tenant_id', 'mailbox': 'mailbox',
         }
         for key, column in direct.items():
             if filters.get(key) is not None:
@@ -146,6 +162,11 @@ class EventRepository:
         if filters.get('attachment_name_contains') is not None:
             clauses.append("arrayExists(x -> positionCaseInsensitiveUTF8(x['filename'], {attachment_name_contains:String}) > 0, external_attachments)")
             params['attachment_name_contains'] = str(filters['attachment_name_contains'])
+        if filters.get('subject_or_attachment_contains') is not None:
+            clauses.append("(positionCaseInsensitiveUTF8(subject, {subject_or_attachment_contains:String}) > 0 OR "
+                           "arrayExists(x -> positionCaseInsensitiveUTF8(x['filename'], "
+                           "{subject_or_attachment_contains:String}) > 0, external_attachments))")
+            params['subject_or_attachment_contains'] = str(filters['subject_or_attachment_contains'])
         return (' WHERE ' + ' AND '.join(clauses)) if clauses else '', params
 
     def explain(self, filters: dict[str, Any], *, stats: bool = False) -> dict[str, Any]:
@@ -188,3 +209,27 @@ class EventRepository:
             'WHERE event_id = {event_id:String} LIMIT 1',
             parameters={'event_id': event_id}, settings=_EVENT_QUERY_SETTINGS)
         return _public_row(result.column_names, result.result_rows[0]) if result.result_rows else None
+
+    def overview(self) -> dict[str, Any]:
+        """Admin-only inventory, no raw payloads, server endpoints, or tenant ACL claims."""
+        tables = []
+        for name in ('mail_records', 'mail_events', 'analysis_events'):
+            final = ' FINAL' if name != 'analysis_events' else ''
+            count = self.client.query(f'SELECT count() FROM `{self.database}`.{name}{final}',
+                                      parameters={}, settings=_EVENT_QUERY_SETTINGS).result_rows[0][0]
+            metadata = self.client.query(
+                'SELECT engine, total_bytes FROM system.tables '
+                'WHERE database = {db:String} AND name = {name:String}',
+                parameters={'db': self.database, 'name': name}, settings=_EVENT_QUERY_SETTINGS).result_rows
+            tables.append({'name': name, 'logical_rows': int(count),
+                           'engine': metadata[0][0] if metadata else 'unknown',
+                           'physical_bytes': metadata[0][1] if metadata else None})
+        groups = {}
+        for field in ('source_system_id', 'tenant_id', 'mailbox'):
+            result = self.client.query(
+                f'SELECT {field}, count() AS total FROM {self.table} FINAL '
+                f'GROUP BY {field} ORDER BY total DESC, {field} LIMIT 20',
+                parameters={}, settings=_EVENT_QUERY_SETTINGS)
+            groups[field] = [{'value': row[0], 'total': int(row[1])} for row in result.result_rows]
+        return {'status': 'available', 'tables': tables, 'event_groups_top20': groups,
+                'count_semantics': 'logical FINAL for mail tables; physical_bytes may be unavailable'}

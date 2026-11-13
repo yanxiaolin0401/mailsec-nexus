@@ -3,3 +3,20 @@
 @media(max-width:700px){.app-shell{display:block}.sidebar{position:fixed;z-index:51;left:0;top:0;bottom:0;width:260px;transform:translateX(-100%);transition:transform .2s;overflow:auto}.sidebar.open{transform:translateX(0)}.mobile-scrim.visible{display:block;position:fixed;inset:0;z-index:50;background:#0b1d35a8;border:0}.mobile-menu{display:grid}.topbar{height:61px;padding:0 18px}.topbar-name{display:none}.content{padding:27px 17px 55px}.page-head{align-items:start}.page-head h1{font-size:25px}.page-head .page-badge{display:none}.page-head>button{font-size:11px;padding:8px}.module-grid{grid-template-columns:1fr}.module-card{min-height:150px}.search-form{padding:18px;gap:14px}.field,.field.grow,.field.compact{flex-basis:100%}.search-submit{width:100%}.overview-grid{gap:14px}.hero-panel{padding:27px;min-height:230px}.hero-panel h2{font-size:21px}.login-screen{display:block;background:#f7f9fd}.login-side{display:none}.login-main{min-height:100vh;padding:24px}.login-mobile-brand{display:block;position:absolute;top:30px;left:24px;color:#213653}.login-mobile-brand .brand small{color:#8494ad}.login-card{margin:auto 0;max-width:400px}.login-bottom{bottom:18px}.drawer{width:100%}th,td{padding:13px 16px}.panel-head{padding:18px}.topbar-role{display:none}}
 .account-button{border:0;background:none;color:#526bd7;font-size:11px;font-weight:700;padding:6px}.account-button:hover{text-decoration:underline}.dialog-copy{font-size:12px;line-height:1.7;margin:0 0 20px}
 @media(max-width:700px){.account-button{font-size:10px}}
+.search-stats{margin:0 24px 22px;padding:10px 13px;background:#eef5ff;border:1px solid #dce8fb;border-radius:8px;color:#365576;font-size:12px}
+.search-stats strong{color:#274a91}
+.login-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
+.login-tabs button{padding:10px 5px}
+.tenant-hint{font-size:11px;line-height:1.6;color:#7283a0;margin:-9px 0 18px}
+.form-success{padding:10px 13px;background:#e8f7ef;border:1px solid #bee8cf;color:#176c4b;border-radius:8px;font-size:12px;margin:16px 0}
+/* Reserve space for the fixed-position brand/footer when registration is tall. */
+.login-main{padding-bottom:64px}
+@media(max-width:700px){.login-main{padding-top:100px}}
+
+.stack-form .checkbox-field{display:flex;align-items:center;gap:8px}.stack-form .checkbox-field input{width:16px;height:16px;margin:0}
+
+.llm-form{padding:24px;max-width:640px}.llm-provider-links{margin:-8px 0 16px;font-size:12px}.llm-provider-links a{color:#3854ca}.llm-form .llm-check{display:flex;align-items:center;gap:10px}.llm-check input{width:16px;height:16px;margin:0}.llm-form>.primary{width:max-content}
+
+.nl-panel{margin-bottom:22px}.nl-form{padding:20px 24px;display:flex;align-items:end;gap:14px;flex-wrap:wrap}.nl-form label{flex:1 1 360px;font-size:11px;font-weight:700;color:#53647c}.nl-form textarea{display:block;width:100%;min-height:78px;margin-top:7px;padding:10px 12px;border:1px solid #dfe5ee;border-radius:8px;font:inherit;font-size:12px;resize:vertical}.nl-preview{padding:0 24px 22px}.nl-preview strong{font-size:12px}.nl-preview pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fc;padding:14px;border-radius:8px;font-size:11px;max-height:320px;overflow:auto}.nl-panel>.form-error{margin:0 24px 22px}@media(max-width:700px){.nl-form>.primary{width:100%}}
+
+.advanced-filters{margin:0 24px 20px;font-size:12px;color:#415777}.advanced-filters summary{cursor:pointer;font-weight:700}.advanced-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;padding:16px 0}.advanced-grid label{font-size:11px;font-weight:700}.advanced-grid input,.advanced-grid select{display:block;width:100%;height:39px;margin-top:6px;padding:0 10px;border:1px solid #dfe5ee;border-radius:8px;color:#233650;background:#fbfcfe}

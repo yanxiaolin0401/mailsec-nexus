@@ -1,0 +1,10 @@
+{"at": "2026-11-05T06:03:45.308188+00:00", "action": "session_start", "result": "对齐研发主线与统一输入流v2.0，优先可靠接入、存储管理、检索；保留已有数据。"}
+{"at": "2026-11-05T06:03:45.308229+00:00", "action": "inspection", "result": "已读取研发计划、统一契约与bench客户端；发现X-Intake-Key、批量数组、UUID、强类型字段、头部限额与现有接口不一致。"}
+{"at": "2026-11-05T06:03:45.308242+00:00", "action": "workspace_policy", "result": "新增AGENTS.md，规定每次会话及实质操作追加仓库logs日志，不新建非重要docs文档。"}
+{"at": "2026-11-05T06:08:15.029643+00:00", "action": "intake_api", "result": "实现接入key仅POST写权限、JSON语法400/媒体415/契约422/背压503、原子batch接口与只读队列/存储管理路由；无默认测试key。真实数据存在621非法UUID与20非法sender，保持严格校验。"}
+{"at": "2026-11-05T06:09:25.738735+00:00", "action": "storage_schema_queries", "result": "新增5个规范列和非破坏性ADD COLUMN升级、事件/历史邮件/分析写入显式同步确认；增加来源事件ID/UUID/tenant/mailbox与主题或附件名OR过滤、管理员存储概览。"}
+{"at": "2026-11-05T06:18:10.415673+00:00", "action": "cloud_before_upgrade", "counts": {"mail_records": 109516, "mail_events": 13, "analysis_events": 8}, "event_columns": 34, "input_sha256": "c00827e61437675635a48068c2ee4745cfc3be91a7fc2b729f02502afaa10587"}
+{"at": "2026-11-05T06:18:45.031778+00:00", "action": "cloud_additive_upgrade", "event_columns": 39, "existing_events_preserved": 13, "connection_note": "initial 10s timeout recovered on retry; no source records deleted"}
+{"at": "2026-11-05T06:21:24.162109+00:00", "action": "deploy_and_acceptance", "result": "API/worker部署新版本，Cloud39列与旧记录保留，开始原始1000条严格接入/落库核验。"}
+{"at": "2026-11-05T06:22:24.477670+00:00", "action": "review_fixes_and_usage", "result": "落实审计有界manifest、to+cc10000上限、worker16MiB与接入64MiB预处理分离、UUID规范化、UTC微秒标记与cc检索；README更新操作和剩余验收边界，未在docs新增文档。"}
+{"at": "2026-11-05T06:30:11.871400+00:00", "action": "delivery_verified", "result": "规范接入、存储管理与查询已上线；原件哈希不变，979条规范派生记录写入且重放不增加行数，21无效隔离；全量测试/浏览器/真实Cloud验收证据见日志，剩余研发验收明确列出。"}

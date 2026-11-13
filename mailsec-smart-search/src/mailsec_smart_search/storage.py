@@ -27,11 +27,12 @@ _MAIL_COLUMNS = (
 )
 _ANALYSIS_COLUMNS = ("event_id", "mail_id", "created_at", "analysis_json")
 # Some historical Date headers produced pre-1900 DateTime64 values.  The
-# clickhouse-connect 1.10 C decoder cannot decode them reliably; keep the
-# stored value intact and mask only the result projection sent to the client.
+# clickhouse-connect 1.10 C decoder can crash even when a Nullable DateTime64
+# projection marks them null, so never send DateTime64 ticks in mail results.
 _SAFE_SENT_AT = (
-    "if(toUnixTimestamp64Milli(sent_at) >= -2208988800000 "
-    "AND toUnixTimestamp64Milli(sent_at) < 10413792000000, sent_at, NULL) AS sent_at"
+    "if(toUnixTimestamp64Milli(mail_records.sent_at) >= -2208988800000 "
+    "AND toUnixTimestamp64Milli(mail_records.sent_at) < 10413792000000, "
+    "toString(mail_records.sent_at), NULL) AS sent_at"
 )
 _MAIL_SELECT = ", ".join(_SAFE_SENT_AT if column == "sent_at" else column for column in _MAIL_COLUMNS)
 _SUMMARY_SELECT = (
@@ -74,6 +75,16 @@ def _utc(value: datetime) -> datetime:
     return value.astimezone(timezone.utc)
 
 
+def _decoded_sent_at(value: Any) -> datetime | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        # sent_at is stored as DateTime64(3, 'UTC'); toString emits UTC without
+        # an offset.  Preserve the API's datetime contract after safe decoding.
+        value = datetime.fromisoformat(value)
+    return _utc(value)
+
+
 def _mail_row(record: MailRecord) -> tuple[Any, ...]:
     return (
         record.mail_id, record.raw_sha256, record.raw_path, record.source,
@@ -95,7 +106,7 @@ def _as_mail(values: dict[str, Any]) -> MailRecord:
     return MailRecord(
         mail_id=values["mail_id"], raw_sha256=values["raw_sha256"],
         raw_path=values["raw_path"], source=values["source"],
-        ingested_at=values["ingested_at"], sent_at=values["sent_at"],
+        ingested_at=values["ingested_at"], sent_at=_decoded_sent_at(values["sent_at"]),
         header_message_id=values["header_message_id"], sender=values["sender"],
         sender_domain=values["sender_domain"], recipients=list(values["recipients"]),
         subject=values["subject"], body_text=values["body_text"],
@@ -112,7 +123,7 @@ def _as_candidate(values: dict[str, Any]) -> MailRecord:
     return MailRecord(
         mail_id=values["mail_id"], raw_sha256=values["raw_sha256"],
         raw_path=values["raw_path"], source=values["source"],
-        ingested_at=values["ingested_at"], sent_at=values["sent_at"],
+        ingested_at=values["ingested_at"], sent_at=_decoded_sent_at(values["sent_at"]),
         sender=values["sender"], sender_domain=values["sender_domain"],
         subject=values["subject"], body_text=values["body_text"],
         attachments=[AttachmentInfo(**item) for item in json.loads(values["attachments_json"])],
@@ -175,7 +186,7 @@ class ClickHouseRepository:
         rows = [_mail_row(record) for record in records]
         if not rows:
             return 0
-        self.client.insert(f"{self.database}.mail_records", rows, column_names=list(_MAIL_COLUMNS))
+        self.client.insert(f"{self.database}.mail_records", rows, column_names=list(_MAIL_COLUMNS), settings={'async_insert': 0})
         return len(rows)
 
     def get_mail(self, mail_id: str) -> MailRecord | None:
@@ -225,8 +236,8 @@ class ClickHouseRepository:
         conditions: list[str] = []
         params: dict[str, Any] = {}
         for attr, clause, type_name in (
-            ("from_time", "sent_at >=", "DateTime64(3)"),
-            ("to_time", "sent_at <=", "DateTime64(3)"),
+            ("from_time", "mail_records.sent_at >=", "DateTime64(3)"),
+            ("to_time", "mail_records.sent_at <=", "DateTime64(3)"),
             ("sender", "sender =", "String"),
             ("sender_domain", "sender_domain =", "String"),
         ):
@@ -274,7 +285,10 @@ class ClickHouseRepository:
             "LIMIT {limit:UInt16} OFFSET {offset:UInt16}",
             params, query,
         )
-        return [dict(zip(result.column_names, row)) for row in result.result_rows]
+        rows = [dict(zip(result.column_names, row)) for row in result.result_rows]
+        for row in rows:
+            row["sent_at"] = _decoded_sent_at(row["sent_at"])
+        return rows
 
     def search_candidates(self, query: SearchQuery) -> list[MailRecord]:
         """SOP-only bounded match projection; no headers or entire mail body."""
@@ -308,6 +322,7 @@ class ClickHouseRepository:
             f"{self.database}.analysis_events",
             [(event_id, mail_id, datetime.now(timezone.utc), json.dumps(analysis, ensure_ascii=False))],
             column_names=list(_ANALYSIS_COLUMNS),
+            settings={'async_insert': 0},
         )
         return event_id
 

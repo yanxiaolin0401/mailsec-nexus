@@ -16,6 +16,8 @@ class Settings:
     session_hours: int = 12
     csrf_secret: str = ""
     platform_origin: str = ""
+    smart_search_timeout_seconds: float = 30.0
+    smart_search_socket: str = ""
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -29,4 +31,6 @@ class Settings:
             cookie_secure=os.getenv("COOKIE_SECURE", "true").lower() == "true",
             csrf_secret=os.getenv("CSRF_SECRET") or secrets.token_urlsafe(32),
             platform_origin=os.getenv("PLATFORM_ORIGIN", "").rstrip("/"),
+            smart_search_timeout_seconds=float(os.getenv("SMART_SEARCH_TIMEOUT_SECONDS", "30")),
+            smart_search_socket=os.getenv("SMART_SEARCH_SOCKET", ""),
         )

@@ -13,3 +13,4 @@ docs/ClickHouse/clickhouse_credentials.txt
 var/
 .data/
 .omx/
+docs/api_keys_info.md

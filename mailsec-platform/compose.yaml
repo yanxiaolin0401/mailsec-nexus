@@ -67,7 +67,7 @@ services:
       SMART_SEARCH_DEDICATED: ${SMART_SEARCH_DEDICATED:-false}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CSRF_SECRET: ${CSRF_SECRET:?Set CSRF_SECRET}
-      PLATFORM_ORIGIN: ${PLATFORM_ORIGIN:-http://localhost:8091}
+      PLATFORM_ORIGIN: ${PLATFORM_ORIGIN:-http://localhost:5173}
     depends_on:
       postgres: {condition: service_healthy}
       search: {condition: service_started}
@@ -84,7 +84,7 @@ services:
       postgres: {condition: service_healthy}
   web:
     build: ./web
-    ports: ['127.0.0.1:8091:80']
+    ports: ['127.0.0.1:5173:80']
     depends_on: [api]
     restart: unless-stopped
 

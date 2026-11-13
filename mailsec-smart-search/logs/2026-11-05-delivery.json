@@ -1,0 +1,109 @@
+{
+  "at": "2026-11-05T06:30:11.871400+00:00",
+  "development_plan_alignment": {
+    "ingestion_contract": {
+      "status": "verified",
+      "evidence": [
+        "2026-11-05-contract-final-tests.log",
+        "2026-11-05-live-strict.json",
+        "2026-11-05-live-boundaries.json"
+      ]
+    },
+    "durable_storage_and_replay": {
+      "status": "verified",
+      "evidence": [
+        "2026-11-05-live-derived-batch.json",
+        "2026-11-05-live-replay.json"
+      ]
+    },
+    "structured_search_and_storage_ui": {
+      "status": "verified",
+      "evidence": [
+        "2026-11-05-browser.json",
+        "2026-11-05-live-boundaries.json"
+      ]
+    },
+    "llm_dual_protocol_and_nl_safety": {
+      "status": "unit_regression_only",
+      "gap": "No authorized live model credentials; no external model calls"
+    },
+    "json_event_sop": {
+      "status": "not_delivered",
+      "gap": "Existing SOP remains legacy EML based"
+    },
+    "100k_canonical_load_and_enterprise_blind_acceptance": {
+      "status": "not_verified",
+      "gap": "979 derivative records are not a 100k load or blind quality benchmark"
+    },
+    "production_multitenant_acl": {
+      "status": "not_implemented",
+      "gap": "One global admin credential; tenant_id is untrusted classification metadata; source pair globally unique"
+    },
+    "deletion_and_retention": {
+      "status": "not_enabled",
+      "gap": "Storage management is read-only; no destructive deletion or retention actions added"
+    }
+  },
+  "original_input_unchanged": true,
+  "input_counts": {
+    "original": 1000,
+    "strict_valid": 358,
+    "strict_rejected": 642,
+    "explicit_uuid_repairs": 621,
+    "derived_valid_and_cloud_verified": 979,
+    "quarantined": 21
+  },
+  "cloud_counts": {
+    "mail_records": 109516,
+    "mail_events": 992,
+    "analysis_events": 8
+  },
+  "runtime_dependencies_added": 0,
+  "changed_files": [
+    "AGENTS.md",
+    "README.md",
+    ".env.example",
+    "compose.yaml",
+    ".dockerignore",
+    "docs/架构与安全.md",
+    "src/mailsec_smart_search/config.py",
+    "src/mailsec_smart_search/api.py",
+    "src/mailsec_smart_search/event_api.py",
+    "src/mailsec_smart_search/events.py",
+    "src/mailsec_smart_search/canonical.py",
+    "src/mailsec_smart_search/event_spool.py",
+    "src/mailsec_smart_search/event_storage.py",
+    "src/mailsec_smart_search/event_schema.sql",
+    "src/mailsec_smart_search/storage.py",
+    "src/mailsec_smart_search/static/index.html",
+    "src/mailsec_smart_search/static/console.js",
+    "scripts/preflight_intake.py",
+    "scripts/verify_intake.py",
+    "tests/test_canonical.py",
+    "tests/test_preflight_intake.py",
+    "tests/test_intake_api.py",
+    "tests/test_event_spool.py",
+    "tests/test_event_storage.py",
+    "tests/test_events.py",
+    "tests/test_storage.py",
+    "tests/console_ui_test.cjs",
+    "tests/test_console_ui.py"
+  ],
+  "no_new_docs_files": true,
+  "new_raw_payloads_or_credentials_in_logs": false,
+  "validation": {
+    "pytest_passed": 216,
+    "pytest_warnings": 1,
+    "compileall": true,
+    "javascript_syntax": true,
+    "ruff_runtime_checks": true,
+    "full_repository_ruff_reports": 140,
+    "mypy_errors_remaining": 11,
+    "mypy_error_files": [
+      "parser.py",
+      "llm.py",
+      "analysis.py"
+    ],
+    "real_cloud_http_and_browser": true
+  }
+}

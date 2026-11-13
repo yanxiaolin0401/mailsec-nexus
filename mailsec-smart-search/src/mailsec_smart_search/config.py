@@ -11,7 +11,7 @@ from pathlib import Path
 class Settings:
     data_dir: Path = Path("./var")
     datasets_dir: Path = Path("./data")
-    max_message_bytes: int = 15 * 1024 * 1024
+    max_message_bytes: int = 16 * 1024 * 1024
     max_spool_bytes: int = 5 * 1024 * 1024 * 1024
     parse_timeout_seconds: float = 10.0
     clickhouse_host: str = "127.0.0.1"
@@ -29,8 +29,10 @@ class Settings:
     llm_api_key: str = field(default="", repr=False)
     llm_external_authorized: bool = False
     llm_timeout_seconds: float = 15.0
+    llm_max_output_tokens: int = 1024
     max_llm_calls_per_run: int = 10
     api_token: str = field(default="", repr=False)
+    intake_key: str = field(default="", repr=False)
 
     def __post_init__(self) -> None:
         if self.clickhouse_host.endswith('.clickhouse.cloud'):
@@ -43,6 +45,8 @@ class Settings:
             raise ValueError("timeouts must be positive and <=120 seconds")
         if not 1 <= self.max_llm_calls_per_run <= 100:
             raise ValueError("model call budget must be 1..100")
+        if not 64 <= self.llm_max_output_tokens <= 4096:
+            raise ValueError("model output token limit must be 64..4096")
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -55,7 +59,7 @@ class Settings:
         return cls(
             data_dir=Path(os.getenv("MAILSEC_DATA_DIR", "./var")).resolve(),
             datasets_dir=Path(os.getenv("MAILSEC_DATASETS_DIR", "./data")).resolve(),
-            max_message_bytes=integer("MAILSEC_MAX_MESSAGE_BYTES", 15 * 1024 * 1024),
+            max_message_bytes=integer("MAILSEC_MAX_MESSAGE_BYTES", 16 * 1024 * 1024),
             max_spool_bytes=integer("MAILSEC_MAX_SPOOL_BYTES", 5 * 1024 * 1024 * 1024),
             parse_timeout_seconds=number("MAILSEC_PARSE_TIMEOUT", 10.0),
             clickhouse_host=os.getenv("CLICKHOUSE_HOST", "127.0.0.1"),
@@ -73,6 +77,8 @@ class Settings:
             llm_api_key=os.getenv("MAILSEC_LLM_API_KEY", ""),
             llm_external_authorized=os.getenv("MAILSEC_LLM_EXTERNAL_AUTHORIZED", "").lower() == "true",
             llm_timeout_seconds=number("MAILSEC_LLM_TIMEOUT", 15.0),
+            llm_max_output_tokens=integer("MAILSEC_LLM_MAX_OUTPUT_TOKENS", 1024),
             max_llm_calls_per_run=integer("MAILSEC_MAX_LLM_CALLS_PER_RUN", 10),
             api_token=os.getenv("MAILSEC_API_TOKEN", ""),
+            intake_key=os.getenv("MAILSEC_INTAKE_KEY", ""),
         )

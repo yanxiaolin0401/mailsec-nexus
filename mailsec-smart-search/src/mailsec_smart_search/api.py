@@ -5,23 +5,22 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import hmac
+import json
 import logging
 import time
 from collections import deque
 from contextlib import asynccontextmanager
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .config import Settings
 from .domain import MailRecord, SearchQuery
+from .llm_config import ModelConfiguration, RuntimeSettings
 
 _LOG = logging.getLogger(__name__)
 _BODY_READ_TIMEOUT_SECONDS = 30.0
@@ -62,10 +61,11 @@ class SOPRequest(BaseModel):
 class _RequestGuard:
     """Authenticate and bound all /v1 requests before framework body parsing."""
 
-    def __init__(self, app: Any, max_message_bytes: int, api_token: str):
+    def __init__(self, app: Any, max_message_bytes: int, api_token: str, intake_key: str = ""):
         self.app = app
         self.max_message_bytes = max_message_bytes
         self.api_token = api_token
+        self.intake_key = intake_key
         self.slots = asyncio.Semaphore(8)
 
     async def __call__(self, scope: dict, receive: Any, send: Any) -> None:
@@ -73,18 +73,24 @@ class _RequestGuard:
             await self.app(scope, receive, send)
             return
         headers = dict(scope.get("headers", []))
-        tokens = [value for key, value in scope.get("headers", []) if key.lower() == b"x-mailsec-token"]
-        if not self.api_token:
-            _LOG.warning("request_denied category=auth_unconfigured")
+        intake = scope.get("method") == "POST" and scope["path"] == "/api/v2/mails"
+        intake_tokens = [value for key, value in scope.get("headers", []) if key.lower() == b"x-intake-key"]
+        use_intake = intake and bool(intake_tokens)
+        tokens = intake_tokens if use_intake else [value for key, value in scope.get("headers", []) if key.lower() == b"x-mailsec-token"]
+        expected = self.intake_key if use_intake else self.api_token
+        if not expected:
             await self._reject(send, 503, b"API authentication is not configured")
             return
-        if len(tokens) != 1 or not hmac.compare_digest(tokens[0], self.api_token.encode()):
-            _LOG.warning("request_denied category=auth_invalid")
-            await self._reject(send, 401, b"invalid API token")
+        if len(tokens) != 1 or not hmac.compare_digest(tokens[0], expected.encode()):
+            await self._reject(send, 401, b"invalid API credential")
             return
+        if use_intake:
+            scope.setdefault("state", {})["intake_authenticated"] = True
         upload = scope["path"].endswith("/upload")
         raw = scope["path"] in {"/v1/mail/raw", "/api/v2/mails"}
         limit = self.max_message_bytes + (64 * 1024 if upload else 0) if (upload or raw) else 64 * 1024
+        if intake:
+            limit = min(self.max_message_bytes, 16 * 1024 * 1024)
         try:
             declared = int(headers.get(b"content-length", b"0"))
         except ValueError:
@@ -147,8 +153,9 @@ class _RequestGuard:
 
     @staticmethod
     async def _reject(send: Any, code: int, body: bytes) -> None:
+        body = json.dumps({"detail": body.decode("utf-8")}).encode("utf-8")
         await send({"type": "http.response.start", "status": code,
-                    "headers": [(b"content-type", b"text/plain; charset=utf-8"),
+                    "headers": [(b"content-type", b"application/json"),
                                 (b"cache-control", b"no-store")]})
         await send({"type": "http.response.body", "body": body})
 
@@ -202,10 +209,11 @@ def create_app(
 
     event_spool = event_spool or EventSpool(settings)
     event_repository = event_repository or EventRepository(repository)
+    settings = RuntimeSettings(settings)
     app = FastAPI(title="MailSec Smart Search", version="0.1.0")
     app.add_middleware(_RequestGuard, max_message_bytes=settings.max_message_bytes,
-                       api_token=settings.api_token)
-    app.state.settings = settings
+                       api_token=settings.api_token, intake_key=settings.intake_key)
+    app.state.settings = settings.current
     app.state.spool = spool
     app.state.repository = repository
     app.state.event_spool = event_spool
@@ -244,6 +252,9 @@ def create_app(
             expensive_slots.release()
 
     def require_auth(request: Request) -> None:
+        if (request.method == "POST" and request.url.path == "/api/v2/mails"
+                and getattr(request.state, "intake_authenticated", False)):
+            return
         if not settings.api_token:
             raise HTTPException(status_code=503, detail="API authentication is not configured")
         if not hmac.compare_digest(
@@ -381,7 +392,7 @@ def create_app(
                     raw = await asyncio.to_thread(read_evidence, record, settings)
                 except (OSError, ValueError) as exc:
                     raise HTTPException(status_code=503, detail="raw evidence unavailable") from exc
-                result = await asyncio.to_thread(analyze_mail, record, raw, settings)
+                result = await asyncio.to_thread(analyze_mail, record, raw, settings.current)
                 value = _as_json(result)
                 await asyncio.to_thread(repository.save_analysis, mail_id, value)
                 return value
@@ -389,6 +400,23 @@ def create_app(
                 raise
             except Exception as exc:
                 raise HTTPException(status_code=503, detail="analysis unavailable") from exc
+
+    @app.get("/api/v1/llm/config", dependencies=[Depends(require_auth)])
+    def model_config_read() -> dict[str, Any]:
+        return settings.public()
+
+    @app.put("/api/v1/llm/config", dependencies=[Depends(require_auth)])
+    async def model_config_update(request: Request) -> dict[str, Any]:
+        try:
+            payload = ModelConfiguration.model_validate(await request.json())
+        except (ValidationError, ValueError, TypeError) as exc:
+            raise HTTPException(status_code=422, detail="invalid model configuration") from exc
+        try:
+            result = settings.update(payload)
+        except OSError as exc:
+            raise HTTPException(status_code=503, detail="model configuration unavailable") from exc
+        app.state.settings = settings.current
+        return result
 
     @app.post("/v1/nl/query", dependencies=[Depends(require_auth)])
     async def natural_query(request: NaturalLanguageRequest) -> dict[str, Any]:
@@ -430,7 +458,7 @@ def create_app(
         )
         try:
             async with expensive_operation(1):
-                plan = await asyncio.to_thread(request_json, system_prompt, masked, settings)
+                plan = await asyncio.to_thread(request_json, system_prompt, masked, settings.current)
             if not isinstance(plan, dict) or set(plan) != {"tool", "filters"} or plan.get("tool") not in {"search", "stats"}:
                 raise ValueError("unsupported or extra model query fields")
             filters = _bind_filters(plan["filters"], bindings)
@@ -494,7 +522,7 @@ def create_app(
             calls = min(matched, 10, budget) if spec.analyze and settings.llm_api_key and settings.llm_external_authorized else 0
             async with expensive_operation(calls):
                 return await asyncio.to_thread(
-                    run_sop, preset, repository, settings, candidate_limit=spec.candidate_limit,
+                    run_sop, preset, repository, settings.current, candidate_limit=spec.candidate_limit,
                     analyze=spec.analyze, max_model_calls=budget if spec.analyze else 0,
                     rows=rows, started_at=started_at,
                 )
@@ -509,17 +537,6 @@ def create_app(
 
     app.include_router(event_router(settings, event_spool, event_repository,
                                     require_auth, bounded_query, expensive_operation, repository))
-    static = Path(__file__).with_name("static")
-    app.mount("/assets", StaticFiles(directory=static), name="assets")
-
-    @app.get("/", include_in_schema=False)
-    def console() -> FileResponse:
-        return FileResponse(static / "index.html", headers={
-            "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
-            "X-Content-Type-Options": "nosniff",
-            "Cache-Control": "no-store",
-        })
-
     return app
 
 

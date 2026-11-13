@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 import pytest
@@ -11,7 +11,7 @@ from mailsec_smart_search.redaction import model_payload
 
 
 def record():
-    return MailRecord("id", "hash", "/private/raw.eml", "test", datetime.now(timezone.utc),
+    return MailRecord("id", "hash", "/private/raw.eml", "test", datetime.now(UTC),
                       sender="alice@example.org", sender_domain="example.org",
                       recipients=["bob@company.test"], subject="Hello bob@company.test",
                       body_text="Visit https://bad.example/login bob@company.test")
@@ -87,3 +87,59 @@ def test_configured_model_cannot_send_without_authorization():
     with httpx.Client(transport=httpx.MockTransport(forbidden)) as client:
         result = analyze_with_llm(record(), replace(settings(), llm_external_authorized=False), client=client)
     assert result.status == "unavailable" and "not authorized" in result.error
+
+
+def test_deepseek_bounded_json_mode_and_private_usage_log(caplog):
+    from dataclasses import replace
+
+    seen = []
+
+    def handler(request):
+        seen.append(json.loads(request.content))
+        return httpx.Response(200, json={
+            "choices": [{"finish_reason": "stop", "message": {"content": '{"ok":true}'}}],
+            "usage": {"prompt_tokens": 12, "completion_tokens": 4, "total_tokens": 16,
+                      "private": "do-not-log", "input_tokens": "not-a-count"},
+        })
+
+    configured = replace(settings(), llm_base_url="https://api.deepseek.com",
+                         llm_model="deepseek-flash", llm_max_output_tokens=512)
+    with (caplog.at_level("INFO", logger="mailsec_smart_search.llm"),
+          httpx.Client(transport=httpx.MockTransport(handler)) as client):
+        assert request_json("JSON only", "private query", configured, client=client) == {"ok": True}
+    assert seen[0]["thinking"] == {"type": "disabled"}
+    assert seen[0]["response_format"] == {"type": "json_object"}
+    assert seen[0]["max_tokens"] == 512
+    assert '"total_tokens": 16' in caplog.text
+    assert not any(value in caplog.text for value in ("do-not-log", "private query", "secret", "not-a-count"))
+
+
+def test_deepseek_options_not_sent_to_other_providers():
+    def handler(request):
+        body = json.loads(request.content)
+        assert "thinking" not in body and "response_format" not in body
+        assert body["max_tokens"] == 1024
+        return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        assert request_json("system", "query", settings(), client=client) == {}
+
+
+@pytest.mark.parametrize("provider,response", [
+    ("openai", {"choices": [{"finish_reason": "length", "message": {"content": "{}"}}]}),
+    ("anthropic", {"stop_reason": "max_tokens", "content": [{"type": "text", "text": "{}"}]}),
+    ("openai", []),
+])
+def test_incomplete_or_nonobject_response_rejected(provider, response):
+    with (httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, json=response))) as client,
+          pytest.raises(ModelCallError) as exc):
+        request_json("system", "query", settings(provider), client=client)
+    assert exc.value.status == "invalid"
+
+
+def test_output_token_config_bounds_and_env(monkeypatch):
+    for value in (0, 63, 4097):
+        with pytest.raises(ValueError, match="token limit"):
+            Settings(llm_max_output_tokens=value)
+    monkeypatch.setenv("MAILSEC_LLM_MAX_OUTPUT_TOKENS", "512")
+    assert Settings.from_env().llm_max_output_tokens == 512

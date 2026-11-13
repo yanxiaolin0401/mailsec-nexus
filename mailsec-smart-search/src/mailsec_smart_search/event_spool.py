@@ -22,6 +22,7 @@ from .events import normalize_event
 from .spool import MessageTooLargeError, SpoolFullError
 
 _MAX_BATCH_BYTES = 16 * 1024 * 1024
+_MAX_ENQUEUE_BYTES = 64 * 1024 * 1024
 _LOG = logging.getLogger(__name__)
 
 
@@ -61,6 +62,7 @@ class EventSpool:
                 CREATE UNIQUE INDEX IF NOT EXISTS jobs_source_pair
                 ON jobs(source_system_id, source_event_id)
                 WHERE source_system_id != '-' AND source_event_id != '-';
+                CREATE UNIQUE INDEX IF NOT EXISTS jobs_event_id ON jobs(event_id);
                 CREATE INDEX IF NOT EXISTS jobs_ready ON jobs(status, accepted_at);
             ''')
 
@@ -112,55 +114,97 @@ class EventSpool:
             'status': 'accepted', 'acceptedAt': row['accepted_at'], 'jobId': row['job_id'],
         }
 
-    def enqueue(self, payload: dict[str, Any], ingress_ip: str = 'unknown') -> dict[str, str]:
-        if not isinstance(payload, dict):
-            raise ValueError('JSON payload must be an object')
-        raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(',', ':'),
-                         allow_nan=False).encode('utf-8')
-        if len(raw) > self.settings.max_message_bytes:
-            raise MessageTooLargeError('JSON event exceeds configured byte limit')
-        digest = hashlib.sha256(raw).hexdigest()
+    def enqueue(self, payload: dict[str, Any], ingress_ip: str = 'unknown',
+                *, canonical: bool = False) -> dict[str, str]:
+        """Compatibility wrapper: single and batch ingest share one transaction path."""
+        return self.enqueue_many([payload], ingress_ip=ingress_ip, canonical=canonical)[0]
+
+    def enqueue_many(self, payloads: list[dict[str, Any]], ingress_ip: str = 'unknown',
+                     *, canonical: bool = False) -> list[dict[str, str]]:
+        """Validate all mail events, then accept all or none in one SQLite transaction."""
+        if not isinstance(payloads, list) or not 1 <= len(payloads) <= 1000:
+            raise ValueError('event batch must contain 1..1000 objects')
+        prepared: list[tuple[dict[str, Any], str, bytes, str, str]] = []
         now = datetime.now(timezone.utc)
-        event = normalize_event(payload, ingress_ip=ingress_ip, now=now)
-        event_bytes = json.dumps(event, ensure_ascii=False, separators=(',', ':'),
-                                 allow_nan=False).encode('utf-8')
-        if len(event_bytes) > _MAX_BATCH_BYTES:
-            raise MessageTooLargeError('normalized JSON event exceeds batch byte limit')
-        source_system = str(event['source_system_id'])
-        source_event = str(event['source_event_id'])
-        pair = source_system not in {'', '-'} and source_event not in {'', '-'}
-        accepted_at = now.isoformat()
-        job_id = uuid4().hex
+        normalized_bytes = 0
+        for payload in payloads:
+            if not isinstance(payload, dict):
+                raise ValueError('JSON payload must be an object')
+            raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(',', ':'),
+                             allow_nan=False).encode('utf-8')
+            if len(raw) > self.settings.max_message_bytes:
+                raise MessageTooLargeError('JSON event exceeds configured byte limit')
+            digest = hashlib.sha256(raw).hexdigest()
+            event = (normalize_event(payload, ingress_ip=ingress_ip, now=now,
+                                     canonical=True) if canonical else
+                     normalize_event(payload, ingress_ip=ingress_ip, now=now))
+            event_bytes = json.dumps(event, ensure_ascii=False, separators=(',', ':'),
+                                     allow_nan=False).encode('utf-8')
+            if len(event_bytes) > _MAX_BATCH_BYTES:
+                raise MessageTooLargeError('normalized JSON event exceeds worker batch byte limit')
+            normalized_bytes += len(event_bytes)
+            if normalized_bytes > _MAX_ENQUEUE_BYTES:
+                raise MessageTooLargeError('normalized JSON enqueue batch exceeds memory byte limit')
+            prepared.append((event, digest, event_bytes, str(event['source_system_id']),
+                             str(event['source_event_id'])))
+
         with self._connect() as connection:
             connection.execute('BEGIN IMMEDIATE')
-            if pair:
-                existing = connection.execute(
-                    'SELECT * FROM jobs WHERE source_system_id = ? AND source_event_id = ?',
-                    (source_system, source_event)).fetchone()
-                if existing:
-                    if existing['payload_hash'] != digest:
-                        raise ConflictError('source event identity already exists with different payload')
-                    return self._receipt(existing)
             used = connection.execute("SELECT coalesce(sum(payload_bytes), 0) FROM jobs WHERE status IN ('pending', 'retry')").fetchone()[0]
-            if used + len(event_bytes) > self.settings.max_spool_bytes:
-                raise SpoolFullError('event spool byte quota exceeded')
-            # Receipts must stay available for idempotency after payload delivery.
-            # Bound their backing files too rather than silently growing forever.
-            disk_used = sum(path.stat().st_size for path in
-                            (self.path, Path(str(self.path) + '-wal'), Path(str(self.path) + '-shm'))
-                            if path.exists())
-            reserve = len(event_bytes) * 3 + 65536
-            disk_budget = max(1024 * 1024, self.settings.max_spool_bytes)
-            if disk_used + reserve > disk_budget or shutil.disk_usage(self.root).free < max(64 * 1024 * 1024, reserve):
-                raise SpoolFullError('event spool backing files or disk free-space limit reached')
-            connection.execute('''INSERT INTO jobs
-                (job_id, event_id, source_system_id, source_event_id, trace_id,
-                 accepted_at, payload_hash, event_json, payload_bytes, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')''',
-                (job_id, event['event_id'], source_system, source_event, event['trace_id'],
-                 accepted_at, digest, event_bytes, len(event_bytes)))
-            row = connection.execute('SELECT * FROM jobs WHERE job_id = ?', (job_id,)).fetchone()
-            return self._receipt(row)
+            new_bytes = 0
+            receipts = []
+            for event, digest, event_bytes, source_system, source_event in prepared:
+                event_id = str(event['event_id'])
+                pair = source_system not in {'', '-'} and source_event not in {'', '-'}
+                existing_pair = None
+                if pair:
+                    existing_pair = connection.execute(
+                        'SELECT * FROM jobs WHERE source_system_id = ? AND source_event_id = ?',
+                        (source_system, source_event)).fetchone()
+                existing_id = connection.execute(
+                    'SELECT * FROM jobs WHERE event_id = ?', (event_id,)).fetchone()
+                if existing_pair:
+                    # Historical rows used a digest ID rather than the canonical UUID.
+                    # Preserve their original receipt on exact-payload replay.
+                    if ((existing_id and existing_id['job_id'] != existing_pair['job_id'])
+                            or existing_pair['payload_hash'] != digest):
+                        raise ConflictError('event identity already exists with different payload')
+                    receipts.append(self._receipt(existing_pair))
+                    continue
+                if existing_id:
+                    if (existing_id['payload_hash'] != digest
+                            or existing_id['source_system_id'] != source_system
+                            or existing_id['source_event_id'] != source_event):
+                        raise ConflictError('event identity already exists with different payload')
+                    receipts.append(self._receipt(existing_id))
+                    continue
+                new_bytes += len(event_bytes)
+                if used + new_bytes > self.settings.max_spool_bytes:
+                    raise SpoolFullError('event spool byte quota exceeded')
+                job_id = uuid4().hex
+                accepted_at = now.isoformat()
+                try:
+                    connection.execute('''INSERT INTO jobs
+                        (job_id, event_id, source_system_id, source_event_id, trace_id,
+                         accepted_at, payload_hash, event_json, payload_bytes, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')''',
+                        (job_id, event_id, source_system, source_event, event['trace_id'],
+                         accepted_at, digest, event_bytes, len(event_bytes)))
+                except sqlite3.IntegrityError as exc:
+                    raise ConflictError('event identity already exists') from exc
+                row = connection.execute('SELECT * FROM jobs WHERE job_id = ?', (job_id,)).fetchone()
+                receipts.append(self._receipt(row))
+            if new_bytes:
+                # Receipt rows remain after delivery, so bound database and free space too.
+                disk_used = sum(path.stat().st_size for path in
+                                (self.path, Path(str(self.path) + '-wal'), Path(str(self.path) + '-shm'))
+                                if path.exists())
+                reserve = new_bytes * 3 + 65536
+                disk_budget = max(1024 * 1024, self.settings.max_spool_bytes)
+                if (disk_used + reserve > disk_budget or
+                        shutil.disk_usage(self.root).free < max(64 * 1024 * 1024, reserve)):
+                    raise SpoolFullError('event spool backing files or disk free-space limit reached')
+            return receipts
 
     def get_job(self, job_id: str) -> dict[str, Any] | None:
         with self._connect() as connection:
@@ -178,6 +222,40 @@ class EventSpool:
             counts = {'pending': 0, 'retry': 0, 'done': 0}
             counts.update({row[0]: row[1] for row in rows})
             return counts
+
+    def summary(self) -> dict[str, Any]:
+        """Operational queue metrics; never read stored event JSON."""
+        with self._connect() as connection:
+            rows = connection.execute('SELECT status, count(*) FROM jobs GROUP BY status').fetchall()
+            counts = {'pending': 0, 'retry': 0, 'done': 0}
+            counts.update({row[0]: row[1] for row in rows})
+            pending_bytes, oldest = connection.execute('''
+                SELECT coalesce(sum(payload_bytes), 0), min(accepted_at)
+                FROM jobs WHERE status IN ('pending', 'retry')''').fetchone()
+            disk_bytes = sum(path.stat().st_size for path in
+                             (self.path, Path(str(self.path) + '-wal'), Path(str(self.path) + '-shm'))
+                             if path.exists())
+        return {'counts': counts, 'pending_bytes': pending_bytes,
+                'queue_quota_bytes': self.settings.max_spool_bytes,
+                'disk_bytes': disk_bytes, 'oldest_pending_at': oldest}
+
+    def list_jobs(self, status: str | None = None, limit: int = 50,
+                  offset: int = 0) -> dict[str, Any]:
+        """Page safe receipt metadata without payloads, hashes, or local paths."""
+        if status is not None and status not in {'pending', 'retry', 'done'}:
+            raise ValueError('invalid job status')
+        if not 1 <= limit <= 200 or not 0 <= offset <= 10000:
+            raise ValueError('limit must be 1..200 and offset 0..10000')
+        where = ' WHERE status = ?' if status is not None else ''
+        params = (status,) if status is not None else ()
+        with self._connect() as connection:
+            total = connection.execute('SELECT count(*) FROM jobs' + where, params).fetchone()[0]
+            rows = connection.execute('''SELECT job_id, event_id, source_system_id,
+                source_event_id, trace_id, accepted_at, status, attempts, error_type
+                FROM jobs''' + where + ' ORDER BY accepted_at DESC, job_id DESC LIMIT ? OFFSET ?',
+                (*params, limit, offset)).fetchall()
+        return {'items': [dict(row) for row in rows], 'total': total,
+                'limit': limit, 'offset': offset}
 
     def flush(self, repository: Any, batch_size: int = 250) -> int:
         if not 1 <= batch_size <= 1000:

@@ -1,0 +1,104 @@
+{
+  "status": "invalid",
+  "mode": "uuid_repair_opt_in",
+  "original_contract_passed": false,
+  "input_sha256_before": "c00827e61437675635a48068c2ee4745cfc3be91a7fc2b729f02502afaa10587",
+  "input_sha256_after": "c00827e61437675635a48068c2ee4745cfc3be91a7fc2b729f02502afaa10587",
+  "input_unchanged": true,
+  "total": 1000,
+  "accepted": 979,
+  "rejected": 21,
+  "repaired_event_ids": 621,
+  "categories": {
+    "invalid from address": 20,
+    "invalid or missing to": 1
+  },
+  "issues": [
+    {
+      "line": 162,
+      "category": "invalid from address"
+    },
+    {
+      "line": 342,
+      "category": "invalid or missing to"
+    },
+    {
+      "line": 362,
+      "category": "invalid from address"
+    },
+    {
+      "line": 459,
+      "category": "invalid from address"
+    },
+    {
+      "line": 477,
+      "category": "invalid from address"
+    },
+    {
+      "line": 536,
+      "category": "invalid from address"
+    },
+    {
+      "line": 568,
+      "category": "invalid from address"
+    },
+    {
+      "line": 572,
+      "category": "invalid from address"
+    },
+    {
+      "line": 582,
+      "category": "invalid from address"
+    },
+    {
+      "line": 597,
+      "category": "invalid from address"
+    },
+    {
+      "line": 648,
+      "category": "invalid from address"
+    },
+    {
+      "line": 663,
+      "category": "invalid from address"
+    },
+    {
+      "line": 667,
+      "category": "invalid from address"
+    },
+    {
+      "line": 699,
+      "category": "invalid from address"
+    },
+    {
+      "line": 724,
+      "category": "invalid from address"
+    },
+    {
+      "line": 764,
+      "category": "invalid from address"
+    },
+    {
+      "line": 832,
+      "category": "invalid from address"
+    },
+    {
+      "line": 902,
+      "category": "invalid from address"
+    },
+    {
+      "line": 918,
+      "category": "invalid from address"
+    },
+    {
+      "line": 950,
+      "category": "invalid from address"
+    },
+    {
+      "line": 978,
+      "category": "invalid from address"
+    }
+  ],
+  "note": "UUID repair creates a derivative; it does not make the original input contract-compliant",
+  "checked_at": "2026-11-05T06:17:37.783467+00:00"
+}

@@ -1,0 +1,13 @@
+{
+  "at": "2026-11-05T06:24:56.677077+00:00",
+  "storage_overview": true,
+  "queue_jobs": true,
+  "canonical_event_id_filter_detail": true,
+  "legacy_search_pagination": true,
+  "forget_clears_management_results": true,
+  "mobile_no_overflow": true,
+  "token_not_persisted": true,
+  "javascript_errors": [],
+  "external_page_requests": 0,
+  "model_calls": 0
+}

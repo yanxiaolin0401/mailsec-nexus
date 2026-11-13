@@ -6,3 +6,6 @@ select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
 
 [lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends", "Depends"]
+
+[lint.isort]
+known-first-party = ["platform_api"]

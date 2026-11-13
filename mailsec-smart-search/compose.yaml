@@ -10,6 +10,7 @@ x-app: &app
     CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Set CLICKHOUSE_PASSWORD in .env}
     CLICKHOUSE_DB: mailsec
     MAILSEC_API_TOKEN: ${MAILSEC_API_TOKEN:?Set MAILSEC_API_TOKEN in .env}
+    MAILSEC_INTAKE_KEY: ${MAILSEC_INTAKE_KEY:-}
     RSPAMD_URL: http://rspamd:11333
     CLAMD_HOST: clamav
     MAILSEC_LLM_PROVIDER: ${MAILSEC_LLM_PROVIDER:-}
@@ -18,6 +19,7 @@ x-app: &app
     MAILSEC_LLM_API_KEY: ${MAILSEC_LLM_API_KEY:-}
     MAILSEC_LLM_EXTERNAL_AUTHORIZED: ${MAILSEC_LLM_EXTERNAL_AUTHORIZED:-false}
     MAILSEC_LLM_TIMEOUT: ${MAILSEC_LLM_TIMEOUT:-15}
+    MAILSEC_LLM_MAX_OUTPUT_TOKENS: ${MAILSEC_LLM_MAX_OUTPUT_TOKENS:-1024}
     MAILSEC_MAX_LLM_CALLS_PER_RUN: ${MAILSEC_MAX_LLM_CALLS_PER_RUN:-10}
   volumes:
     - app_data:/data
@@ -52,8 +54,6 @@ services:
   api:
     <<: *app
     command: ["mailsec", "serve", "--host", "0.0.0.0", "--port", "8080"]
-    ports:
-      - "127.0.0.1:8080:8080"
   worker:
     <<: *app
     command: ["mailsec", "worker", "--loop"]

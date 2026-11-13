@@ -1,0 +1,10 @@
+{
+  "time": "2026-11-12T08:59:08.110186+00:00",
+  "checks": {
+    "role_protection_and_uds_integration": true
+  },
+  "model_calls": 0,
+  "passed": false,
+  "failed_step": "unauthorized_and_roles",
+  "error_type": "TargetClosedError"
+}

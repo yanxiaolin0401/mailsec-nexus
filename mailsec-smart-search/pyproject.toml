@@ -24,7 +24,7 @@ mailsec = "mailsec_smart_search.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-mailsec_smart_search = ["schema.sql", "event_schema.sql", "static/*"]
+mailsec_smart_search = ["schema.sql", "event_schema.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

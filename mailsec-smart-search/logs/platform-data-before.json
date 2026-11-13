@@ -1,0 +1,21 @@
+{
+  "events": {
+    "total": 992
+  },
+  "queue": {
+    "counts": {
+      "pending": 0,
+      "retry": 0,
+      "done": 982
+    },
+    "pending_bytes": 0,
+    "queue_quota_bytes": 5368709120,
+    "disk_bytes": 13266944,
+    "oldest_pending_at": null
+  },
+  "legacy": {
+    "total": 109516,
+    "with_attachment": 625,
+    "parse_failed": 596
+  }
+}

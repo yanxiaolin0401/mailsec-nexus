@@ -5,6 +5,42 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/platform/v1/auth/register": {
+      "post": {
+        "summary": "Register",
+        "operationId": "register_api_platform_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Registration"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/platform/v1/auth/login": {
       "post": {
         "summary": "Login",
@@ -325,10 +361,186 @@
         }
       }
     },
+    "/api/platform/v1/mail/nl/plan": {
+      "post": {
+        "summary": "Mail Nl Plan",
+        "operationId": "mail_nl_plan_api_platform_v1_mail_nl_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NaturalPlan"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/v1/mail/plan/execute": {
+      "post": {
+        "summary": "Mail Plan Execute",
+        "operationId": "mail_plan_execute_api_platform_v1_mail_plan_execute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanExecute"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/v1/llm/providers": {
+      "get": {
+        "summary": "Llm Providers",
+        "operationId": "llm_providers_api_platform_v1_llm_providers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/v1/llm/config": {
+      "get": {
+        "summary": "Llm Config",
+        "operationId": "llm_config_api_platform_v1_llm_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/v1/admin/llm/config": {
+      "put": {
+        "summary": "Admin Llm Config",
+        "operationId": "admin_llm_config_api_platform_v1_admin_llm_config_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LlmConfigUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/platform/v1/mail/search": {
       "post": {
         "summary": "Mail Search",
         "operationId": "mail_search_api_platform_v1_mail_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailSearch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/v1/mail/stats": {
+      "post": {
+        "summary": "Mail Stats",
+        "operationId": "mail_stats_api_platform_v1_mail_stats_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -390,6 +602,20 @@
               ],
               "title": "Tenant Id"
             }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "event",
+                "legacy"
+              ],
+              "type": "string",
+              "default": "event",
+              "title": "Source"
+            }
           }
         ],
         "responses": {
@@ -446,6 +672,54 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "LlmConfigUpdate": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic"
+            ],
+            "title": "Provider"
+          },
+          "base_url": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Base Url"
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model"
+          },
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key"
+          },
+          "external_authorized": {
+            "type": "boolean",
+            "title": "External Authorized",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "provider",
+          "base_url",
+          "model"
+        ],
+        "title": "LlmConfigUpdate"
+      },
       "Login": {
         "properties": {
           "username": {
@@ -456,8 +730,6 @@
           },
           "password": {
             "type": "string",
-            "maxLength": 256,
-            "minLength": 1,
             "title": "Password"
           },
           "mode": {
@@ -492,6 +764,39 @@
       },
       "MailSearch": {
         "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "event",
+              "legacy"
+            ],
+            "title": "Source",
+            "default": "event"
+          },
+          "from_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Time"
+          },
+          "to_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Time"
+          },
           "q": {
             "anyOf": [
               {
@@ -517,6 +822,149 @@
               }
             ],
             "title": "Sender"
+          },
+          "sender_domain": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender Domain"
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "has_attachment": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Attachment"
+          },
+          "attachment_suffix": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachment Suffix"
+          },
+          "sender_ip": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 45
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender Ip"
+          },
+          "attachment_md5": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachment Md5"
+          },
+          "risk_verdict": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "unknown",
+                  "pass",
+                  "alert",
+                  "reject"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Verdict"
+          },
+          "subject_or_attachment_contains": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Or Attachment Contains"
+          },
+          "attachment_name_contains": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachment Name Contains"
+          },
+          "source_system_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 256,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source System Id"
           },
           "risk_level": {
             "anyOf": [
@@ -565,18 +1013,50 @@
         "type": "object",
         "title": "MailSearch"
       },
+      "NaturalPlan": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "event",
+              "legacy"
+            ],
+            "title": "Source"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "tenant_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "text"
+        ],
+        "title": "NaturalPlan"
+      },
       "PasswordChange": {
         "properties": {
           "current_password": {
             "type": "string",
-            "maxLength": 256,
-            "minLength": 1,
             "title": "Current Password"
           },
           "new_password": {
             "type": "string",
-            "maxLength": 256,
-            "minLength": 12,
             "title": "New Password"
           }
         },
@@ -587,6 +1067,101 @@
           "new_password"
         ],
         "title": "PasswordChange"
+      },
+      "PlanExecute": {
+        "properties": {
+          "plan_token": {
+            "type": "string",
+            "maxLength": 8192,
+            "minLength": 40,
+            "title": "Plan Token"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "event",
+              "legacy"
+            ],
+            "title": "Source"
+          },
+          "tenant_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 200.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "plan_token",
+          "source"
+        ],
+        "title": "PlanExecute"
+      },
+      "Registration": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9._-]{3,80}$",
+            "title": "Username"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Display Name"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "tenant_slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{1,79}$",
+            "title": "Tenant Slug"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "username",
+          "display_name",
+          "password",
+          "tenant_slug"
+        ],
+        "title": "Registration"
       },
       "TenantCreate": {
         "properties": {
@@ -625,8 +1200,6 @@
           },
           "password": {
             "type": "string",
-            "maxLength": 256,
-            "minLength": 12,
             "title": "Password"
           },
           "role": {
@@ -677,9 +1250,7 @@
           "password": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 256,
-                "minLength": 12
+                "type": "string"
               },
               {
                 "type": "null"

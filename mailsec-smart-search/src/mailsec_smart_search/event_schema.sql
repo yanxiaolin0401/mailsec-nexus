@@ -35,6 +35,11 @@ CREATE TABLE IF NOT EXISTS {database}.mail_events
     to_email_address String,
     raw_json String,
     text_content String,
+    tenant_id LowCardinality(String) DEFAULT 'tenant_default',
+    mailbox LowCardinality(String) DEFAULT 'INBOX',
+    cc_accounts Array(String) DEFAULT [],
+    body_html String DEFAULT '-',
+    security_meta_json String DEFAULT '{}',
     INDEX idx_sender_account sender_account TYPE bloom_filter GRANULARITY 4,
     INDEX idx_event_time event_time TYPE minmax GRANULARITY 1
 )

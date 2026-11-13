@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Literal
+from urllib.parse import urlparse
 
 import httpx
 
 from .config import Settings
 from .domain import MailRecord
 from .redaction import REDACTION_VERSION, model_payload
-
 
 ModelStatus = Literal["ok", "unavailable", "timeout", "invalid"]
 ModelRisk = Literal["clean", "suspicious", "malicious"]
@@ -26,6 +27,7 @@ _SYSTEM = ("Classify the email metadata for malicious intent. Return only a JSON
 _EVIDENCE_FIELDS = frozenset({"sender_domain", "subject", "body_excerpt", "attachment_count", "url_count", "claimed_spf"})
 _MAX_RESPONSE_BYTES = 16_384
 _MAX_OUTPUT_CHARS = 8_192
+_LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,8 +50,6 @@ class ModelCallError(Exception):
 
 
 def _endpoint(settings: Settings) -> tuple[str, dict[str, str]] | None:
-    from urllib.parse import urlparse
-
     provider = settings.llm_provider.lower()
     base = settings.llm_base_url.rstrip("/")
     if not settings.llm_api_key or not settings.llm_model or not base or provider not in {"openai", "anthropic"}:
@@ -73,9 +73,13 @@ def request_json(system_prompt: str, user_text: str, settings: Settings, *, clie
     url, auth = endpoint
     if provider == "openai":
         body = {"model": settings.llm_model, "temperature": 0,
+                "max_tokens": settings.llm_max_output_tokens,
                 "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_text}]}
+        if urlparse(url).hostname == "api.deepseek.com":
+            # Query planning needs bounded JSON, not the provider's default reasoning mode.
+            body.update(thinking={"type": "disabled"}, response_format={"type": "json_object"})
     else:
-        body = {"model": settings.llm_model, "max_tokens": 256, "system": system_prompt,
+        body = {"model": settings.llm_model, "max_tokens": settings.llm_max_output_tokens, "system": system_prompt,
                 "messages": [{"role": "user", "content": user_text}]}
     headers = {**auth, "Content-Type": "application/json"}
     owns_client = client is None
@@ -119,9 +123,22 @@ def request_json(system_prompt: str, user_text: str, settings: Settings, *, clie
                 if len(response.content) > _MAX_RESPONSE_BYTES:
                     raise ValueError("oversized model response")
                 data = response.json()
+                if not isinstance(data, dict):
+                    raise TypeError("non-object model response")
+                usage = data.get("usage", {})
+                if isinstance(usage, dict):
+                    counts = {key: value for key, value in usage.items()
+                              if key in {"prompt_tokens", "completion_tokens", "total_tokens",
+                                         "input_tokens", "output_tokens"}
+                              and type(value) is int and value >= 0}
+                    _LOG.info("model_usage provider=%s tokens=%s", provider, json.dumps(counts, sort_keys=True))
                 if provider == "openai":
+                    if data["choices"][0].get("finish_reason") not in {None, "stop"}:
+                        raise ValueError("incomplete model output")
                     content = data["choices"][0]["message"]["content"]
                 else:
+                    if data.get("stop_reason") not in {None, "end_turn"}:
+                        raise ValueError("incomplete model output")
                     blocks = data["content"]
                     if not isinstance(blocks, list) or not blocks or any(
                         not isinstance(block, dict) or block.get("type", "text") != "text" or not isinstance(block.get("text"), str)
@@ -133,7 +150,7 @@ def request_json(system_prompt: str, user_text: str, settings: Settings, *, clie
                     raise ValueError("non-text model output")
                 parsed = json.loads(content)
                 if not isinstance(parsed, dict):
-                    raise ValueError("model did not return JSON object")
+                    raise TypeError("model did not return JSON object")
                 return parsed
             except (ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError):
                 raise ModelCallError("invalid", "invalid model JSON verdict")

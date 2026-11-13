@@ -1,0 +1,80 @@
+{
+  "at": "2026-11-12T08:16:02.160727+00:00",
+  "provider": "DeepSeek Official",
+  "model": "deepseek-flash",
+  "protocol": "openai-compatible",
+  "final_api_calls": 4,
+  "final_api_usage": [
+    {
+      "completion_tokens": 22,
+      "prompt_tokens": 489,
+      "total_tokens": 511
+    },
+    {
+      "completion_tokens": 23,
+      "prompt_tokens": 490,
+      "total_tokens": 513
+    },
+    {
+      "completion_tokens": 10,
+      "prompt_tokens": 483,
+      "total_tokens": 493
+    },
+    {
+      "completion_tokens": 72,
+      "prompt_tokens": 169,
+      "total_tokens": 241
+    }
+  ],
+  "final_api_total_tokens": 1758,
+  "usage_scope": "Final acceptance run only; excludes initial synthetic, first acceptance and one diagnostic call. No money estimate.",
+  "official_references": [
+    "https://api-docs.deepseek.com/api/create-chat-completion/",
+    "https://api-docs.deepseek.com/guides/thinking_mode/",
+    "https://api-docs.deepseek.com/guides/json_mode/"
+  ],
+  "validation": {
+    "pytest_passed": 232,
+    "warnings": 1,
+    "targeted_ruff": "passed",
+    "compileall": "passed",
+    "js_syntax": "passed",
+    "repository_ruff_reports": 137,
+    "mypy_errors": 11,
+    "mypy_files": [
+      "parser.py",
+      "llm.py",
+      "analysis.py"
+    ],
+    "final_live": "4/4 passed",
+    "first_live": "3/4 passed; original report retained",
+    "malformed_acceptance_response_regressions": 6
+  },
+  "configuration": {
+    "output_tokens": 1024,
+    "call_window_limit": 5,
+    "deadline_seconds": 15,
+    "thinking": "disabled",
+    "json_mode": true,
+    "env_file": ".env.cloud"
+  },
+  "changed_files": [
+    ".gitignore",
+    ".env.example",
+    "compose.yaml",
+    "src/mailsec_smart_search/config.py",
+    "src/mailsec_smart_search/llm.py",
+    "src/mailsec_smart_search/event_api.py",
+    "tests/test_llm.py",
+    "tests/test_event_api.py",
+    "scripts/smoke_smart_search.py",
+    "tests/test_smoke_smart_search.py"
+  ],
+  "credential_safety": "original file ignored and 0600; .env.cloud and rollback backup 0600; no keys in reports",
+  "reports": [
+    "logs/smart-search-live-first.json",
+    "logs/smart-search-live-final.json"
+  ],
+  "rollback": "var/llm-integration/env.cloud.before; restore model settings only and recreate api/worker to disable model while preserving mail data",
+  "review": "Independent review passed after six malformed-response regressions; no blocking findings"
+}

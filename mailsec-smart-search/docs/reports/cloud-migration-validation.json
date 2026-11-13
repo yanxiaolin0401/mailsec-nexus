@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-30T08:54:32.007045+00:00",
+  "tests_passed": 166,
+  "pytest_warnings": 1,
+  "compileall": true,
+  "javascript_syntax": true,
+  "ruff_runtime_errors": 0,
+  "new_migration_and_smoke_full_ruff": true,
+  "repository_full_ruff_reports": 128,
+  "repository_mypy_errors": 11,
+  "mypy_error_files": [
+    "parser.py",
+    "llm.py",
+    "analysis.py"
+  ],
+  "container_evidence": {
+    "spool_all_verified": 5,
+    "dataset_samples_verified": 10,
+    "invalid_historical_date_safe_detail": true
+  },
+  "local_clickhouse_config_restored": true,
+  "local_clickhouse_stopped_source_volume_preserved": true,
+  "cloud_api_worker_running": true,
+  "runtime_dependencies_added": 0
+}

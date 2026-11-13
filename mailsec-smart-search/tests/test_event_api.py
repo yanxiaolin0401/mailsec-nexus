@@ -97,6 +97,8 @@ def test_nl_preview_execution_anchor_and_private_bindings(tmp_path, monkeypatch)
     assert response.json()['executed'] is False and not repo.queries
     assert response.json()['plan']['filters']['sender'] == 'alice@example.org'
     assert 'Asia/Shanghai' in captured[0][0] and 'current_time' in captured[0][0]
+    assert 'attachment_name_contains仅匹配附件名' in captured[0][0]
+    assert '未指定的时间或筛选条件不要添加' in captured[0][0]
     response = client.post('/api/v1/nl/query', json={'text': text, 'execute': True}, headers=AUTH)
     assert response.status_code == 200 and response.json()['executed'] is True
     assert repo.queries[-1]['sender'] == 'alice@example.org'
@@ -114,15 +116,10 @@ def test_invalid_model_output_never_reaches_storage(tmp_path, monkeypatch):
     assert not repo.queries
 
 
-def test_model_failure_preserves_structured_search_and_ui(tmp_path):
+def test_model_failure_preserves_structured_search(tmp_path):
     client, _ = client_at(tmp_path)
     assert client.post('/api/v1/nl/query', json={'text': '查询最近邮件'}, headers=AUTH).status_code == 503
     assert client.get('/api/v1/mails', headers=AUTH).status_code == 200
-    page = client.get('/')
-    assert page.status_code == 200 and '自然语言' in page.text
-    assert 'localStorage' not in client.get('/assets/console.js').text
-    assert 'innerHTML' not in client.get('/assets/console.js').text
-    assert 'Content-Security-Policy' in page.headers
 
 
 def test_private_hash_and_long_numbers_are_not_sent_to_model(tmp_path, monkeypatch):

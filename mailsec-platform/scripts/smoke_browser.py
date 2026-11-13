@@ -102,7 +102,7 @@ def run():
                 expect(page.get_by_role('button', name='账号管理', exact=True)).to_have_count(0)
                 checks.append('user_new_password_login_and_no_admin_navigation')
                 page.get_by_role('button', name='智能检索', exact=True).click()
-                page.get_by_label('关键词', exact=True).fill('synthetic')
+                page.get_by_label('正文包含', exact=True).fill('synthetic')
                 page.get_by_role('button', name='开始检索').click()
                 expect(page.get_by_role('alert')).to_contain_text('Search integration unavailable')
                 checks.append('unconfigured_search_shows_real_failure')

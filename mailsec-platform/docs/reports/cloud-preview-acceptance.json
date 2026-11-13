@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-30T09:10:07.742817+00:00",
+  "status": "passed",
+  "totals": {
+    "legacy": 109516,
+    "event": 13
+  },
+  "checks": [
+    "legacy_stats_pagination_detail_and_tenant_isolation",
+    "event_stats_pagination_detail_and_tenant_isolation",
+    "session_csrf_logout_and_admin_denial",
+    "browser_admin_user_login",
+    "browser_legacy_pagination_detail_stats",
+    "browser_source_switch_event_detail",
+    "mobile_no_overflow_and_no_browser_storage"
+  ],
+  "javascript_errors": [],
+  "cloud_mail_writes": 0,
+  "external_model_calls": 0
+}

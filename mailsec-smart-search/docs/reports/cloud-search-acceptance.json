@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-30T08:52:40.883104+00:00",
+  "checks": {
+    "legacy_total": 109516,
+    "legacy_pagination_and_detail": true,
+    "json_total": 13,
+    "unconfigured_model_explicit_503": true,
+    "auth_required": true,
+    "browser_source_switch": true,
+    "browser_pagination_detail": true,
+    "browser_model_failure_visible": true,
+    "mobile_no_overflow": true,
+    "token_not_persisted_and_cleared": true,
+    "javascript_errors": []
+  },
+  "single_run_timings_ms_not_capacity_benchmark": {
+    "legacy_stats_ms": 62.85,
+    "legacy_page_0_ms": 188.19,
+    "legacy_page_20_ms": 199.95
+  },
+  "external_model_calls": 0,
+  "business_writes": 0
+}

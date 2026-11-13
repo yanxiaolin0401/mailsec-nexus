@@ -265,15 +265,21 @@ def _attachments(mail: dict, tags: list[str]) -> list[dict[str, str]]:
     return result
 
 
-def normalize_event(payload: dict, *, ingress_ip: str = "unknown", now: datetime | None = None) -> dict:
-    """Return 33 documented mail_events columns plus searchable ``text_content``.
+def normalize_event(payload: dict, *, ingress_ip: str = "unknown", now: datetime | None = None,
+                    canonical: bool = False) -> dict:
+    """Normalize canonical v2 flat events or backward-compatible legacy envelopes.
 
-    The canonical nested envelope separates source metadata from ``mail``; flat and
+    The legacy nested envelope separates source metadata from ``mail``; flat and
     ``data`` envelopes are accepted only when unambiguous. Unknown fields remain
     in raw_json for audit, never become searchable columns.
     """
     if not isinstance(payload, dict):
         raise ValueError("event payload must be an object")
+    if canonical or (not any(key in payload for key in ("mail", "data")) and any(key in payload for key in (
+            "eventId", "to", "cc", "bodyText", "bodyHtml", "rawHeaders",
+            "senderIp", "securityMeta", "tenantId", "mailbox", "attachments"))):
+        from .canonical import normalize_canonical
+        return normalize_canonical(payload, ingress_ip=ingress_ip, now=now)
     nested = [key for key in ("mail", "data") if key in payload]
     if len(nested) > 1:
         raise ValueError("ambiguous mail/data envelopes")
@@ -399,5 +405,6 @@ def normalize_event(payload: dict, *, ingress_ip: str = "unknown", now: datetime
         "external_attachments": external_attachments, "mail_headers": header_text,
         "mail_date": date_claim.isoformat(), "reply_to": reply_to, "src_email_address": sender or "-",
         "to_email_address": recipients[0] if recipients else "-", "raw_json": raw,
-        "text_content": body or "-",
+        "text_content": body or "-", "tenant_id": "tenant_default", "mailbox": "INBOX",
+        "cc_accounts": [], "body_html": "-", "security_meta_json": "{}",
     }

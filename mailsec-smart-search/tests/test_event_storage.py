@@ -13,7 +13,8 @@ class FakeClient:
     def command(self, sql):
         self.commands.append(sql)
 
-    def insert(self, table, rows, column_names):
+    def insert(self, table, rows, column_names, settings=None):
+        assert settings == {"async_insert": 0}
         self.inserts.append((table, rows, column_names))
 
     def query(self, sql, parameters, settings):
@@ -90,3 +91,33 @@ def test_utc_query_output_includes_timezone_and_aliases_cannot_narrow_filters():
     value = _public_row(['event_time', 'subject'], (datetime(2026, 10, 21), 'hello'))
     assert value['event_time'] == '2026-10-21T00:00:00+00:00'
     assert _EVENT_QUERY_SETTINGS['prefer_column_name_to_alias'] == 1
+
+
+def test_canonical_columns_additive_upgrade_old_queue_and_sync_commit():
+    repository, client = repo()
+    repository.ensure_schema()
+    alters = [sql for sql in client.commands if sql.startswith('ALTER')]
+    assert len(alters) == 5
+    assert all('ADD COLUMN IF NOT EXISTS' in sql for sql in alters)
+    assert not any('DROP' in sql for sql in client.commands)
+    item = dict.fromkeys(_COLUMNS, '-')
+    for column in ('tenant_id', 'mailbox', 'cc_accounts', 'body_html', 'security_meta_json'):
+        item.pop(column)
+    item.update(event_time='2026-11-01T00:00:00Z', ingested_at='2026-11-01T00:00:00Z',
+                mail_date='2026-11-01T00:00:00Z')
+    repository.insert_batch([item])
+    values = dict(zip(client.inserts[-1][2], client.inserts[-1][1][0]))
+    assert values['tenant_id'] == 'tenant_default' and values['mailbox'] == 'INBOX'
+    assert values['cc_accounts'] == [] and values['security_meta_json'] == '{}'
+
+
+def test_new_identifiers_and_subject_attachment_or_remain_bound():
+    repository, _ = repo()
+    filters = {'tenant_id': "x' OR 1=1", 'mailbox': 'SPAM', 'event_id': 'uuid',
+               'source_event_id': 'upstream', 'subject_or_attachment_contains': 'invoice'}
+    plan = repository.explain(filters)
+    assert ' OR ' in plan['sql'] and 'external_attachments' in plan['sql']
+    for field, value in filters.items():
+        assert plan['parameters'][field] == value
+        assert value not in plan['sql']
+    assert 'raw_json' not in plan['sql'] and 'body_html' not in plan['sql']

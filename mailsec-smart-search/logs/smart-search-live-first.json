@@ -1,0 +1,45 @@
+{
+  "checked_at": "2026-11-12T08:13:27.472917+00:00",
+  "passed": false,
+  "cases": [
+    {
+      "case": "subject",
+      "passed": true,
+      "preview_http": 200,
+      "query_http": 200,
+      "total": 18,
+      "elapsed_ms": 9156.67
+    },
+    {
+      "case": "attachment",
+      "passed": false,
+      "preview_http": 200,
+      "error_type": "ValueError",
+      "elapsed_ms": 969.14
+    },
+    {
+      "case": "stats",
+      "passed": true,
+      "preview_http": 200,
+      "query_http": 200,
+      "total": 992,
+      "elapsed_ms": 766.14
+    },
+    {
+      "case": "analysis",
+      "passed": true,
+      "analysis_http": 200,
+      "status": "ok",
+      "risk_level": "medium",
+      "evidence_refs": [
+        "sender_domain",
+        "subject",
+        "body_excerpt",
+        "attachment_count",
+        "url_count",
+        "claimed_spf"
+      ],
+      "elapsed_ms": 1551.1
+    }
+  ]
+}

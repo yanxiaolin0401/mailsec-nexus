@@ -1,5 +1,8 @@
 # ClickHouse Cloud 迁移与智能检索（2026-10-30）
 
+> 2026-11-12 入口更新：本文保留迁移时的验收历史；其中 8080 独立页面及对应浏览器脚本已退役。当前网页统一使用 platform 的 5173，两个后端通过私有 Unix socket 通信；最新部署见仓库 README。
+
+
 ## 范围与安全边界
 
 - 本轮按用户授权将**已入库的全部逻辑数据**迁入配置于 `.env.cloud` 的 ClickHouse Cloud，不是把 `data/raw/` 下所有未入库语料追加导入。
@@ -7,6 +10,20 @@
 - 本地数据库、原始数据与队列保留；云端既有 3 条 JSON 测试事件保留。`mail_records` / `mail_events` 按 `FINAL` 迁移当前逻辑记录，不复制重复物理版本；分析记录全部保留。
 - Cloud 与本地队列隔离。5 份 spool 原文复制到 Cloud 应用的本机卷并逐份 SHA-256 校验，**不复制任务队列或旧导入 checkpoint**；`dataset://` 原文继续使用只读 `/datasets` 挂载。
 - Cloud 连接显式使用 TLS；密钥只在被 Git 忽略的环境文件中，不写报告、命令参数或前端资源。
+
+## 实际结果
+
+| 表 | 本次迁入 | 云端最终逻辑行数 |
+| --- | ---: | ---: |
+| `mail_records` | 109,516 | 109,516 |
+| `mail_events` | 10 | 13（保留既有 3 条） |
+| `analysis_events` | 8 | 8 |
+
+首次迁移及完整复跑均为 `verified`；复跑三表新增行数均为 0，全列 SHA-256 摘要与首次迁移一致。原文证据在实际运行容器内验证：5 份 spool 全部通过，另抽样 10 份 `dataset://` 原文通过；不将抽样描述成全量重验。
+
+验收：**166 项 pytest 通过**；Chromium 实测数据源切换、翻页、详情、模型未配置提示、移动端布局、清除令牌及不持久化令牌通过，JavaScript 错误为 0。单次统计约 63 ms、前两页约 188/200 ms，仅为本次实测，非容量/SLA 承诺。
+
+检查边界：compileall、JS 语法检查、运行错误级 Ruff 检查，以及新迁移/验收脚本的完整 Ruff 检查通过。全仓库完整 Ruff 仍有 **128** 项报告，mypy 仍有 **11** 项类型错误（parser/llm/analysis）；本轮未进行无关的全库风格/类型重构，**不宣称全仓库 lint/typecheck 全绿**。有 1 项 Starlette/httpx 弃用警告。原始检查日志位于被忽略的 `var/migration/`。
 
 ## 可复跑迁移工具
 
@@ -66,8 +83,19 @@ sudo docker compose --env-file .env.cloud -f compose.yaml -f compose.cloud.yaml 
 - 幂等复跑：`docs/reports/cloud-migration-rerun.json`。
 - 原文副本：`docs/reports/cloud-evidence-copy.json`。
 - API/浏览器验收：`docs/reports/cloud-search-acceptance.json`。
-- 测试、lint、类型检查详见报告；全仓库历史风格/类型问题不在本次迁移范围内。
+- 测试、lint、类型检查详见报告；全仓库风格/类型问题未在本次全部清理。
 - 未配置可用且获授权的第三方模型，真实自然语言模型联通与效果评测**不宣称完成**；此时接口明确返回 503，结构化检索可用。模型协议/规划安全采用模拟回归验证。
 - 扫描服务仍是独立本机依赖；未运行扫描器时不能把分析失败或“未知”显示为“安全”。未完成生产多租户授权、企业盲测或容量承诺。
 
 迁移依据：[Cloud SharedMergeTree](https://clickhouse.com/docs/products/cloud/features/infrastructure/shared-merge-tree)、[Python 写入 API](https://clickhouse.com/docs/integrations/language-clients/python/driver-api)、[重试去重边界](https://clickhouse.com/docs/concepts/features/operations/insert/deduplicating-inserts-on-retries)。
+
+## 主要变更文件
+
+- `scripts/migrate_clickhouse.py`、`tests/test_migration.py`：盘点、兼容性检查、分区迁移、读回校验与安全复跑。
+- `src/mailsec_smart_search/config.py`、`storage.py`、`compose.cloud.yaml`、`.env.example`：显式 TLS、迁移超时、异常日期安全投影；本地内存配置已恢复，不作为永久改动。
+- `src/mailsec_smart_search/api.py`、`parser.py`、`evidence.py` 及对应测试：自然语言安全规划、异常日期与跨部署原文校验。
+- `src/mailsec_smart_search/static/{index.html,console.js,console.css}`、`tests/test_console_ui.py`、`tests/console_ui_test.cjs`：双数据源界面与无新增运行依赖的路由回归。
+- `scripts/smoke_cloud_search.py`：可复跑的真实 API/浏览器只读验收。
+- `README.md`、`data/README.md`、`docs/验证记录.md`、本文及 `docs/reports/cloud-*.json`：迁移范围、结果、限制和回退说明。
+
+实现复用现有两个检索接口与占位符机制，不新增检索引擎、不复制任务队列、不增加应用依赖。

@@ -1,0 +1,25 @@
+{
+  "at": "2026-11-05T06:21:38.824363+00:00",
+  "input_sha256": "c00827e61437675635a48068c2ee4745cfc3be91a7fc2b729f02502afaa10587",
+  "input_records": 1000,
+  "expected_rejected": 642,
+  "http_codes": {
+    "422": 642,
+    "202": 358
+  },
+  "unique_jobs_done": 358,
+  "cloud_rows_verified": 358,
+  "before_tables": {
+    "mail_records": 109516,
+    "mail_events": 13,
+    "analysis_events": 8
+  },
+  "after_tables": {
+    "mail_records": 109516,
+    "mail_events": 371,
+    "analysis_events": 8
+  },
+  "elapsed_seconds": 13.97,
+  "intake_key_read_access_denied": true,
+  "external_model_calls": 0
+}

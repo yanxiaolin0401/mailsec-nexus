@@ -14,10 +14,14 @@ services:
     profiles: [local-database]
   api:
     depends_on: !reset {}
+    # The shared platform is the only browser entry; this API uses private IPC.
+    ports: !reset []
+    command: ["mailsec", "serve", "--uds", "/run/mailsec/search.sock"]
     environment:
       <<: *cloud-db
     volumes:
       - cloud_app_data:/data
+      - ./var/platform-ipc/search:/run/mailsec
   worker:
     depends_on: !reset {}
     environment:
